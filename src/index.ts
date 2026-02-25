@@ -1,9 +1,41 @@
-import { Hono } from "hono"
-import type { PicobaseConfig } from "./types.ts"
+import { Hono } from 'hono'
+import { createDb } from './db/client.ts'
+import type { PicobaseConfig } from './types.ts'
+import type { DatabaseSync } from 'node:sqlite'
 
-export function definePicobase(_config: PicobaseConfig): Hono {
-  const app = new Hono()
-  app.get("/", (c) => c.text("Picobase OK"))
+export type AppEnv = {
+  Variables: {
+    db: DatabaseSync
+    config: Required<PicobaseConfig>
+  }
+}
+
+export function definePicobase(config: PicobaseConfig): Hono {
+  const resolved: Required<PicobaseConfig> = {
+    database: config.database,
+    basePath: config.basePath ?? '/',
+    migrationsDir: config.migrationsDir ?? './migrations',
+    backupsDir: config.backupsDir ?? './backups',
+  }
+
+  const db = createDb(resolved.database)
+  const app = new Hono<AppEnv>()
+
+  // Inject db and config into every request
+  app.use('*', async (c, next) => {
+    c.set('db', db)
+    c.set('config', resolved)
+    await next()
+  })
+
+  app.get('/', (c) => c.redirect(`${resolved.basePath.replace(/\/$/, '')}/tables`))
+
+  // Feature routers will be mounted in later tasks
+  app.get('/tables', (c) => c.text('tables coming soon'))
+  app.get('/schema', (c) => c.text('schema coming soon'))
+  app.get('/migrations', (c) => c.text('migrations coming soon'))
+  app.get('/backups', (c) => c.text('backups coming soon'))
+
   return app
 }
 
