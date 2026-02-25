@@ -6,7 +6,8 @@
     "dev": "node --watch example/server.ts",
     "start": "node example/server.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "node example/seed.ts"
   },
   "dependencies": {
     "hono": "^4.7.0",
