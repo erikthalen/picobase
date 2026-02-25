@@ -49,7 +49,7 @@ export function createTablesRouter(): Hono<AppEnv> {
     const db = c.get('db')
     const config = c.get('config')
     const tableName = c.req.param('table')
-    const body = await c.req.parseBody()
+    const body = await c.req.json() as Record<string, string>
     const cols = Object.keys(body).filter((k) => body[k] !== '')
     if (cols.length > 0) {
       const vals = cols.map((k) => body[k])

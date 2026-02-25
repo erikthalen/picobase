@@ -68,7 +68,7 @@ Signals should serve specific purposes:
 ```html
 <div data-signals="{_menuOpen: false, searchQuery: ''}">
   <button data-on:click="_menuOpen = !_menuOpen">Menu</button>
-  <input data-bind:value="searchQuery" data-on:input.debounce_300ms="@get('/search')">
+  <input data-bind:value="searchQuery" data-on:input__debounce_300ms="@get('/search')">
 </div>
 ```
 

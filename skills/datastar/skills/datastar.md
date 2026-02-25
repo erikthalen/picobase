@@ -202,7 +202,7 @@ This enables real-time collaboration patterns.
 
 1. **Use Compression**: Brotli on SSE streams can achieve 200:1 ratios due to repetitive DOM data
 2. **Fat Morph**: Don't fear sending large HTML chunks - morphing is efficient
-3. **Debounce Input**: Use `data-on:input.debounce_500ms` for search fields
+3. **Debounce Input**: Use `data-on:input__debounce_500ms` for search fields
 
 ## When to Use This Skill
 

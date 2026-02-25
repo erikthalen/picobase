@@ -13,10 +13,10 @@ Handle DOM events with optional modifiers.
 <button data-on:click="@post('/action')">Click</button>
 
 <!-- With modifiers -->
-<button data-on:click.prevent="@post('/submit')">Submit</button>
+<button data-on:click__prevent="@post('/submit')">Submit</button>
 
 <!-- Debounced input -->
-<input data-on:input.debounce_300ms="@get('/search')">
+<input data-on:input__debounce_300ms="@get('/search')">
 
 <!-- Window-level events -->
 <div data-on:keydown__window="handleKey(evt)">
@@ -25,12 +25,12 @@ Handle DOM events with optional modifiers.
 <input data-on:focus="highlight()" data-on:blur="unhighlight()">
 ```
 
-**Modifiers:**
-- `.prevent` - preventDefault()
-- `.stop` - stopPropagation()
-- `.once` - Fire only once
-- `.debounce_Xms` - Debounce by X milliseconds
-- `.throttle_Xms` - Throttle by X milliseconds
+**Modifiers** (separated from event name with `__`):
+- `__prevent` - preventDefault()
+- `__stop` - stopPropagation()
+- `__once` - Fire only once
+- `__debounce_Xms` - Debounce by X milliseconds
+- `__throttle_Xms` - Throttle by X milliseconds
 - `__window` - Listen on window instead of element
 
 ### data-on-intersect

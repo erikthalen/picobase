@@ -8,7 +8,7 @@ Common implementation patterns for Datastar applications.
 
 ```html
 <form data-signals="{email: '', password: ''}"
-      data-on:submit.prevent="@post('/login')">
+      data-on:submit__prevent="@post('/login')">
   <input type="email" data-bind:value="email" required>
   <input type="password" data-bind:value="password" required>
   <button type="submit" data-indicator="#submitting">Login</button>
@@ -154,7 +154,7 @@ data: elements <li class="notification new">New message from Alice</li>
 <div data-signals="{query: ''}">
   <input type="search"
          data-bind:value="query"
-         data-on:input.debounce_300ms="@get('/search')"
+         data-on:input__debounce_300ms="@get('/search')"
          placeholder="Search...">
   <div id="results"></div>
 </div>
