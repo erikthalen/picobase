@@ -57,15 +57,17 @@ export function rowsView(opts: {
   </label>`)
     .join('')
 
-  return String(html`<div data-signals="{_showInsert:false}" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+  return String(html`<div data-signals="{_showInsert:false}">
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
   <h2>${table}</h2>
-  <button class="primary" data-on:click="_showInsert=!_showInsert">+ Add row</button>
+  <button class="primary" data-on:click="$_showInsert=!$_showInsert">+ Add row</button>
 </div>
-<div data-show="_showInsert" style="margin-bottom:1rem;padding:1rem;background:white;border-radius:8px;border:1px solid #e5e7eb">
-  <form data-on:submit="@post('${basePath}/tables/${table}'); _showInsert=false">
+<div data-show="$_showInsert" style="margin-bottom:1rem;padding:1rem;background:white;border-radius:8px;border:1px solid #e5e7eb">
+  <form data-on:submit="@post('${basePath}/tables/${table}'); $_showInsert=false">
     ${raw(insertInputs)}
     <button type="submit" class="primary">Insert</button>
   </form>
+</div>
 </div>
 <table>
   <thead><tr>${raw(headers)}<th></th></tr></thead>

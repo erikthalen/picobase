@@ -88,6 +88,8 @@ Define reactive signals (state).
 <div data-signals="{_menuOpen: false, searchQuery: ''}">
 ```
 
+> **Important:** When referencing signals in attribute expressions, always prefix the signal name with `$` (e.g. `$count`, `$_menuOpen`). The `data-signals` definition uses bare names, but all reads and writes in other attributes use `$`-prefixed names.
+
 ### data-json-signals
 
 Define signals from JSON (useful for server-rendered initial state).
