@@ -3,3 +3,5 @@ dist/
 *.db
 *.bak
 example/dev.db
+.DS_Store
+.env

@@ -18,9 +18,9 @@ export function schemaListView(
             c.notnull && !c.pk ? '<span class="badge">NN</span> ' : "";
           const dflt =
             c.dflt_value != null
-              ? `<span style="color:#9ca3af">${String(c.dflt_value)}</span>`
+              ? `<span class="text-faint">${String(c.dflt_value)}</span>`
               : "";
-          return `<tr><td>${c.name}</td><td style="color:#6b7280">${c.type || "ANY"}</td><td>${pkBadge}${fkBadge}${nnBadge}</td><td>${dflt}</td></tr>`;
+          return `<tr><td>${c.name}</td><td class="text-muted">${c.type || "ANY"}</td><td>${pkBadge}${fkBadge}${nnBadge}</td><td>${dflt}</td></tr>`;
         })
         .join("\n");
       return `<div style="margin-bottom:2rem">
@@ -47,7 +47,7 @@ export function schemaListView(
 export function erDiagramView(schema: TableSchema[], basePath: string): string {
   const base = basePath.replace(/\/$/, "");
   const BOX_W = 200;
-  const ROW_H = 22;
+  const ROW_H = 36;
   const BOX_HEADER_H = 32;
   const COL_GAP = 80;
   const ROW_GAP = 60;
@@ -90,16 +90,47 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
       const pos = positions[t.name]!;
       const colRows = t.columns
         .map((c, ci) => {
-          const pk = c.pk ? "🔑 " : "";
+          const pk = c.pk ? "🔑  " : "";
           const fk = t.foreignKeys.some((fk) => fk.from === c.name) ? "⤷ " : "";
-          return `<text x="${pos.x + 10}" y="${pos.y + BOX_HEADER_H + 14 + ci * ROW_H}" font-size="11" fill="#374151" font-family="monospace">${pk}${fk}${c.name}: ${c.type || "ANY"}</text>`;
+
+          return html`
+            ${ci % 2 === 1
+              ? html`<rect
+                  x="${pos.x + 1}"
+                  y="${pos.y + BOX_HEADER_H + ci * ROW_H}"
+                  width="${BOX_W - 2}"
+                  height="${ROW_H}"
+                  style="fill:var(--pb-diagram-row-alt)"
+                />`
+              : ""}
+            <text
+              x="${pos.x + 10}"
+              y="${pos.y + BOX_HEADER_H + 14 + ci * ROW_H + 7}"
+              font-size="11"
+              style="fill:var(--pb-text-heading)"
+            >
+              ${pk}${fk}${c.name}
+              ${c.dflt_value ? `= ${String(c.dflt_value)}` : ""}
+            </text>
+
+            <text
+              x="${pos.x + BOX_W - 10}"
+              y="${pos.y + BOX_HEADER_H + 14 + ci * ROW_H + 8}"
+              font-size="10"
+              style="fill:var(--pb-text-faint)"
+              font-family="monospace"
+              text-anchor="end"
+            >
+              ${c.type || "ANY"}
+            </text>
+          `;
         })
         .join("\n");
 
-      return `<rect x="${pos.x}" y="${pos.y}" width="${BOX_W}" height="${pos.h}" rx="6" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
-<rect x="${pos.x}" y="${pos.y}" width="${BOX_W}" height="${BOX_HEADER_H}" rx="6" fill="#111827"/>
-<rect x="${pos.x}" y="${pos.y + BOX_HEADER_H - 6}" width="${BOX_W}" height="6" fill="#111827"/>
-<text x="${pos.x + 10}" y="${pos.y + 21}" font-size="13" font-weight="600" fill="white" font-family="system-ui">${t.name}</text>
+      return `<rect x="${pos.x}" y="${pos.y}" width="${BOX_W}" height="${pos.h}" rx="8" style="fill:var(--pb-surface);stroke:var(--pb-border)" stroke-width="1"/>
+<rect x="${pos.x}" y="${pos.y}" width="${BOX_W}" height="${BOX_HEADER_H}" rx="8" style="fill:var(--pb-diagram-header)"/>
+<rect x="${pos.x}" y="${pos.y + BOX_HEADER_H - 6}" width="${BOX_W}" height="6" style="fill:var(--pb-diagram-header)"/>
+<text x="${pos.x + 16}" y="${pos.y + 21}" font-size="13" font-weight="600" style="fill:var(--pb-diagram-title)">${t.name}</text>
 ${colRows}`;
     })
     .join("\n");
@@ -110,17 +141,52 @@ ${colRows}`;
         const from = positions[t.name];
         const to = positions[fk.table];
         if (!from || !to) return "";
+        const fromColIdx = t.columns.findIndex((c) => c.name === fk.from);
+        const targetSchema = schema.find((s) => s.name === fk.table);
+        const toColIdx =
+          targetSchema?.columns.findIndex((c) => c.name === fk.to) ?? 0;
+        if (fromColIdx === -1) return "";
         const x1 = from.x + BOX_W;
-        const y1 = from.y + BOX_HEADER_H / 2;
+        const y1 = from.y + BOX_HEADER_H + fromColIdx * ROW_H + ROW_H / 2;
         const x2 = to.x;
-        const y2 = to.y + BOX_HEADER_H / 2;
+        const y2 =
+          to.y +
+          BOX_HEADER_H +
+          (toColIdx === -1 ? 0 : toColIdx) * ROW_H +
+          ROW_H / 2;
         const mx = (x1 + x2) / 2;
-        return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow)"/>`;
+        return html`<path
+          d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"
+          fill="none"
+          style="stroke:var(--pb-diagram-relation)"
+          stroke-width="1.5"
+          stroke-dasharray="5,3"
+        >
+          <!-- marker-end="url(#arrow)" -->
+          <animate
+            attributeName="stroke-dashoffset"
+            from="0"
+            to="-8"
+            dur="1.2s"
+            repeatCount="indefinite"
+        /></path>`;
       }),
     )
     .join("\n");
 
-  const arrowDef = `<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/></marker></defs>`;
+  const arrowDef = html`<defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="6"
+      markerHeight="6"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--pb-diagram-relation)" />
+    </marker>
+  </defs>`;
 
   return String(
     html`<div
@@ -134,9 +200,9 @@ ${colRows}`;
           width="${svgW}"
           height="${svgH}"
           xmlns="http://www.w3.org/2000/svg"
-          style="background:#f9fafb;border-radius:8px;display:block"
+          style="background:var(--pb-diagram-bg);border-radius:8px;display:block"
         >
-          ${raw(arrowDef)} ${raw(svgLines)} ${raw(svgBoxes)}
+          ${raw(arrowDef)} ${raw(svgBoxes)} ${raw(svgLines)}
         </svg>
       </div>`,
   );

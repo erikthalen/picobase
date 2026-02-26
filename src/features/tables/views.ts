@@ -3,10 +3,7 @@ import type { Column } from "./queries.ts";
 
 export function tableListView(tables: string[], basePath: string): string {
   if (tables.length === 0) {
-    return String(
-      html`<h2>Tables</h2>
-        <p>No tables found in this database.</p>`,
-    );
+    return String(html` <p>No tables found in this database.</p>`);
   }
   const rows = tables
     .map(
@@ -15,17 +12,16 @@ export function tableListView(tables: string[], basePath: string): string {
     )
     .join("\n");
   return String(
-    html`<h2>Tables</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${raw(rows)}
-        </tbody>
-      </table>`,
+    html` <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${raw(rows)}
+      </tbody>
+    </table>`,
   );
 }
 
@@ -71,7 +67,7 @@ export function rowsView(opts: {
   <span>Page ${page} of ${totalPages} (${total} rows)</span>
   ${page < totalPages ? `<button data-on:click="@get('${basePath}/tables/${table}?page=${page + 1}')">Next →</button>` : ""}
 </div>`
-      : `<p style="margin-top:0.5rem;color:#6b7280;font-size:0.8rem">${total} row${total !== 1 ? "s" : ""}</p>`;
+      : `<p class="text-muted" style="margin-top:0.5rem;font-size:0.8rem">${total} row${total !== 1 ? "s" : ""}</p>`;
 
   // Insert form — one input per non-PK column
   const insertCols = columns.filter((c) => !c.pk);
@@ -98,7 +94,7 @@ export function rowsView(opts: {
         </div>
         <div
           data-show="$_showInsert"
-          style="margin-bottom:1rem;padding:1rem;background:white;border-radius:8px;border:1px solid #e5e7eb"
+          style="margin-bottom:1rem;padding:1rem;background:var(--pb-surface);border-radius:8px;border:1px solid var(--pb-border)"
         >
           <form
             data-on:submit__prevent="@post('${basePath}/tables/${table}'); $_showInsert=false"

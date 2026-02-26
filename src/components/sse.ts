@@ -1,9 +1,23 @@
-import type { Context } from 'hono'
-import { streamSSE } from 'hono/streaming'
+import type { Context } from "hono";
+import { streamSSE } from "hono/streaming";
 
 export type SSEStream = {
-  patchElements: (html: string) => Promise<void>
-  patchSignals: (signals: Record<string, unknown>) => Promise<void>
+  patchElements: (html: string) => Promise<void>;
+  patchSignals: (signals: Record<string, unknown>) => Promise<void>;
+};
+
+function formatPatchElements(html: string): string {
+  return html
+    .split("\n")
+    .map((l) => `elements ${l}`)
+    .join("\n");
+}
+
+function formatPatchSignals(signals: Record<string, unknown>): string {
+  return JSON.stringify(signals)
+    .split("\n")
+    .map((l) => `signals ${l}`)
+    .join("\n");
 }
 
 /**
@@ -12,20 +26,20 @@ export type SSEStream = {
  */
 export async function respond(
   c: Context,
-  opts: { fullPage: () => string; fragment: () => string }
+  opts: { fullPage: () => string; fragment: () => string },
 ): Promise<Response> {
-  const isDatastar = c.req.header('accept')?.includes('text/event-stream')
+  const isDatastar = c.req.header("accept")?.includes("text/event-stream");
 
   if (!isDatastar) {
-    return c.html(opts.fullPage())
+    return c.html(opts.fullPage());
   }
 
   return streamSSE(c, async (stream) => {
     await stream.writeSSE({
-      event: 'datastar-patch-elements',
-      data: `elements ${opts.fragment()}`,
-    })
-  })
+      event: "datastar-patch-elements",
+      data: formatPatchElements(opts.fragment()),
+    });
+  });
 }
 
 /**
@@ -34,14 +48,20 @@ export async function respond(
  */
 export function sseAction(
   c: Context,
-  fn: (stream: SSEStream) => Promise<void>
+  fn: (stream: SSEStream) => Promise<void>,
 ): Response {
   return streamSSE(c, async (stream) => {
     await fn({
       patchElements: (html) =>
-        stream.writeSSE({ event: 'datastar-patch-elements', data: `elements ${html}` }),
+        stream.writeSSE({
+          event: "datastar-patch-elements",
+          data: formatPatchElements(html),
+        }),
       patchSignals: (signals) =>
-        stream.writeSSE({ event: 'datastar-patch-signals', data: `signals ${JSON.stringify(signals)}` }),
-    })
-  })
+        stream.writeSSE({
+          event: "datastar-patch-signals",
+          data: formatPatchSignals(signals),
+        }),
+    });
+  });
 }

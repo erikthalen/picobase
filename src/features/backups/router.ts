@@ -43,7 +43,7 @@ export function createBackupsRouter(): Hono<AppEnv> {
     const backups = listBackups(config.backupsDir)
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${backupsView({ backups, basePath: base })}</main>`)
-      await patchElements(`<div id="backup-status" style="padding:0.75rem;background:#d1fae5;border-radius:6px;margin-bottom:1rem;color:#065f46">Restored from <strong>${name}</strong>. A safety backup was created automatically.</div>`)
+      await patchElements(`<div id="backup-status" style="padding:0.75rem;background:var(--pb-badge-fk-bg);border-radius:6px;margin-bottom:1rem;color:var(--pb-badge-fk-fg)">Restored from <strong>${name}</strong>. A safety backup was created automatically.</div>`)
     })
   })
 
