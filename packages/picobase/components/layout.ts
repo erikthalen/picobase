@@ -101,7 +101,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
             }
 
             aside {
-              width: 240px;
+              width: 160px;
               padding: 1.25rem 0.5rem;
               flex-shrink: 0;
               display: flex;
@@ -281,7 +281,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               cursor: pointer;
               padding: 0.375rem 0.75rem;
               border: 1px solid var(--pb-border-input);
-              border-radius: 6px;
+              /* border-radius: 6px; */
               background: transparent;
               color: #fafafa;
               font-size: 0.8125rem;
@@ -370,6 +370,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               overflow-x: auto;
               border-bottom: 1px solid var(--pb-border);
               scrollbar-width: none;
+              flex-shrink: 0;
 
               position: sticky;
               top: 0;
