@@ -50,4 +50,12 @@ describe('schema router', () => {
     // SSE response should contain the new table name in the patched HTML
     expect(body).toContain('orders')
   })
+
+  it('POST /schema/tables with missing body returns 200 without crashing', async () => {
+    const app = makeApp()
+    const res = await app.request('/schema/tables', {
+      method: 'POST',
+    })
+    expect(res.status).toBe(200)
+  })
 })

@@ -41,7 +41,12 @@ export function createSchemaRouter(): Hono<AppEnv> {
     const db = c.get('db')
     const config = c.get('config')
     const base = config.basePath.replace(/\/$/, '')
-    const body = (await c.req.json()) as Record<string, string>
+    let body: Record<string, string> = {}
+    try {
+      body = (await c.req.json()) as Record<string, string>
+    } catch {
+      // malformed or missing body — treat as empty
+    }
     const name = (body._tableName ?? '').trim()
     if (name) {
       db.exec(`CREATE TABLE IF NOT EXISTS ${JSON.stringify(name)} (id INTEGER PRIMARY KEY)`)
