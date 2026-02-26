@@ -326,7 +326,7 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
       </g>
       <text
         x="30"
-        y="21"
+        y="20"
         font-size="12"
         font-weight="500"
         style="fill:var(--pb-diagram-title)"
@@ -551,17 +551,57 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
     })();
   </script>`;
 
+  const base = basePath.replace(/\/$/, "");
+
   return String(
     html`${header}
-      <div id="schema-content" style="overflow:auto">
-        <svg
-          width="${svgW}"
-          height="${svgH}"
-          xmlns="http://www.w3.org/2000/svg"
-          style="background:var(--pb-diagram-bg);border-radius:8px;display:block;min-width: 100%;"
+      <div
+        data-signals="{_tableName: ''}"
+        style="position:relative"
+      >
+        <button
+          style="position:absolute;top:1rem;left:1rem;z-index:10"
+          data-on:click="$refs.createTableDialog.showModal()"
         >
-          ${svgLines} ${svgBoxes} ${raw(dragScript)}
-        </svg>
+          + New Table
+        </button>
+        <div id="schema-content" style="overflow:auto">
+          <svg
+            width="${svgW}"
+            height="${svgH}"
+            xmlns="http://www.w3.org/2000/svg"
+            style="background:var(--pb-diagram-bg);border-radius:8px;display:block;min-width: 100%;"
+          >
+            ${svgLines} ${svgBoxes} ${raw(dragScript)}
+          </svg>
+        </div>
+        <dialog data-ref="createTableDialog">
+          <form>
+            <label>
+              Table name
+              <input
+                type="text"
+                data-bind:value="_tableName"
+                placeholder="e.g. orders"
+                autofocus
+              />
+            </label>
+            <div>
+              <button
+                type="button"
+                data-on:click="@post('${base}/schema/tables'); $refs.createTableDialog.close(); _tableName = ''"
+              >
+                Create
+              </button>
+              <button
+                type="button"
+                data-on:click="$refs.createTableDialog.close(); _tableName = ''"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </dialog>
       </div>`,
   );
 }
