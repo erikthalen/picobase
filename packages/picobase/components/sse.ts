@@ -2,22 +2,25 @@ import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 
 export type SSEStream = {
-  patchElements: (html: string) => Promise<void>;
-  patchSignals: (signals: Record<string, unknown>) => Promise<void>;
+	patchElements: (
+		html: string,
+		opts?: { mode?: string; selector?: string },
+	) => Promise<void>;
+	patchSignals: (signals: Record<string, unknown>) => Promise<void>;
 };
 
 function formatPatchElements(html: string): string {
-  return html
-    .split("\n")
-    .map((l) => `elements ${l}`)
-    .join("\n");
+	return html
+		.split("\n")
+		.map((l) => `elements ${l}`)
+		.join("\n");
 }
 
 function formatPatchSignals(signals: Record<string, unknown>): string {
-  return JSON.stringify(signals)
-    .split("\n")
-    .map((l) => `signals ${l}`)
-    .join("\n");
+	return JSON.stringify(signals)
+		.split("\n")
+		.map((l) => `signals ${l}`)
+		.join("\n");
 }
 
 /**
@@ -25,21 +28,21 @@ function formatPatchSignals(signals: Record<string, unknown>): string {
  * or streams a datastar-patch-elements event for Datastar requests.
  */
 export async function respond(
-  c: Context,
-  opts: { fullPage: () => string; fragment: () => string },
+	c: Context,
+	opts: { fullPage: () => string; fragment: () => string },
 ): Promise<Response> {
-  const isDatastar = c.req.header("accept")?.includes("text/event-stream");
+	const isDatastar = c.req.header("accept")?.includes("text/event-stream");
 
-  if (!isDatastar) {
-    return c.html(opts.fullPage());
-  }
+	if (!isDatastar) {
+		return c.html(opts.fullPage());
+	}
 
-  return streamSSE(c, async (stream) => {
-    await stream.writeSSE({
-      event: "datastar-patch-elements",
-      data: formatPatchElements(opts.fragment()),
-    });
-  });
+	return streamSSE(c, async (stream) => {
+		await stream.writeSSE({
+			event: "datastar-patch-elements",
+			data: formatPatchElements(opts.fragment()),
+		});
+	});
 }
 
 /**
@@ -47,21 +50,26 @@ export async function respond(
  * Callback receives helpers to patch DOM and signals.
  */
 export function sseAction(
-  c: Context,
-  fn: (stream: SSEStream) => Promise<void>,
+	c: Context,
+	fn: (stream: SSEStream) => Promise<void>,
 ): Response {
-  return streamSSE(c, async (stream) => {
-    await fn({
-      patchElements: (html) =>
-        stream.writeSSE({
-          event: "datastar-patch-elements",
-          data: formatPatchElements(html),
-        }),
-      patchSignals: (signals) =>
-        stream.writeSSE({
-          event: "datastar-patch-signals",
-          data: formatPatchSignals(signals),
-        }),
-    });
-  });
+	return streamSSE(c, async (stream) => {
+		await fn({
+			patchElements: (html, opts) => {
+				const parts: string[] = [];
+				if (opts?.mode) parts.push(`mode ${opts.mode}`);
+				if (opts?.selector) parts.push(`selector ${opts.selector}`);
+				parts.push(...html.split("\n").map((l) => `elements ${l}`));
+				return stream.writeSSE({
+					event: "datastar-patch-elements",
+					data: parts.join("\n"),
+				});
+			},
+			patchSignals: (signals) =>
+				stream.writeSSE({
+					event: "datastar-patch-signals",
+					data: formatPatchSignals(signals),
+				}),
+		});
+	});
 }

@@ -1,14 +1,14 @@
 import { html, raw } from "hono/html";
 
 interface LayoutProps {
-  title: string;
-  nav: string;
-  content: string;
+	title: string;
+	nav: string;
+	content: string;
 }
 
 export function layout({ title, nav: navHtml, content }: LayoutProps): string {
-  return String(
-    html`<!DOCTYPE html>
+	return String(
+		html`<!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
@@ -17,8 +17,18 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
             content="width=device-width, initial-scale=1.0"
           />
           <title>${title} — Picobase</title>
-          <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzAgMTcwIj48cGF0aCBkPSJNODUgMEMxMDguODM5IDEuMDQyMDJlLTA2IDEzMC4zODUgOS44MTM2MiAxNDUuODIgMjUuNjIxMUMxNDYuMjk1IDI2LjEwNzcgMTQ2Ljc2NSAyNi41OTk4IDE0Ny4yMjkgMjcuMDk3N0MxNjEuMTI2IDQyLjAyNjQgMTY5LjcxNSA2MS45NjI0IDE2OS45OTMgODMuOTAxNEMxNjkuOTk4IDg0LjI2NyAxNzAgODQuNjMzMiAxNzAgODVDMTcwIDEzMS45NDQgMTMxLjk0NCAxNzAgODUgMTcwSDBWODVDMi4wNTJlLTA2IDM4LjA1NTggMzguMDU1OCAtMi4wNTJlLTA2IDg1IDBaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==" media="(prefers-color-scheme: dark)" />
-          <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzAgMTcwIj48cGF0aCBkPSJNODUgMEMxMDguODM5IDEuMDQyMDJlLTA2IDEzMC4zODUgOS44MTM2MiAxNDUuODIgMjUuNjIxMUMxNDYuMjk1IDI2LjEwNzcgMTQ2Ljc2NSAyNi41OTk4IDE0Ny4yMjkgMjcuMDk3N0MxNjEuMTI2IDQyLjAyNjQgMTY5LjcxNSA2MS45NjI0IDE2OS45OTMgODMuOTAxNEMxNjkuOTk4IDg0LjI2NyAxNzAgODQuNjMzMiAxNzAgODVDMTcwIDEzMS45NDQgMTMxLjk0NCAxNzAgODUgMTcwSDBWODVDMi4wNTJlLTA2IDM4LjA1NTggMzguMDU1OCAtMi4wNTJlLTA2IDg1IDBaIiBmaWxsPSJibGFjayIvPjwvc3ZnPg==" media="(prefers-color-scheme: light)" />
+          <link
+            rel="icon"
+            type="image/svg+xml"
+            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzAgMTcwIj48cGF0aCBkPSJNODUgMEMxMDguODM5IDEuMDQyMDJlLTA2IDEzMC4zODUgOS44MTM2MiAxNDUuODIgMjUuNjIxMUMxNDYuMjk1IDI2LjEwNzcgMTQ2Ljc2NSAyNi41OTk4IDE0Ny4yMjkgMjcuMDk3N0MxNjEuMTI2IDQyLjAyNjQgMTY5LjcxNSA2MS45NjI0IDE2OS45OTMgODMuOTAxNEMxNjkuOTk4IDg0LjI2NyAxNzAgODQuNjMzMiAxNzAgODVDMTcwIDEzMS45NDQgMTMxLjk0NCAxNzAgODUgMTcwSDBWODVDMi4wNTJlLTA2IDM4LjA1NTggMzguMDU1OCAtMi4wNTJlLTA2IDg1IDBaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=="
+            media="(prefers-color-scheme: dark)"
+          />
+          <link
+            rel="icon"
+            type="image/svg+xml"
+            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzAgMTcwIj48cGF0aCBkPSJNODUgMEMxMDguODM5IDEuMDQyMDJlLTA2IDEzMC4zODUgOS44MTM2MiAxNDUuODIgMjUuNjIxMUMxNDYuMjk1IDI2LjEwNzcgMTQ2Ljc2NSAyNi41OTk4IDE0Ny4yMjkgMjcuMDk3N0MxNjEuMTI2IDQyLjAyNjQgMTY5LjcxNSA2MS45NjI0IDE2OS45OTMgODMuOTAxNEMxNjkuOTk4IDg0LjI2NyAxNzAgODQuNjMzMiAxNzAgODVDMTcwIDEzMS45NDQgMTMxLjk0NCAxNzAgODUgMTcwSDBWODVDMi4wNTJlLTA2IDM4LjA1NTggMzguMDU1OCAtMi4wNTJlLTA2IDg1IDBaIiBmaWxsPSJibGFjayIvPjwvc3ZnPg=="
+            media="(prefers-color-scheme: light)"
+          />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
@@ -77,22 +87,29 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               margin: 0;
               padding: 0;
             }
+            html {
+              font-size: 14px;
+              text-rendering: geometricPrecision;
+            }
             body {
               font-family: var(--pb-sans-serif);
               display: flex;
               min-height: 100vh;
               background: var(--pb-bg);
               color: #fafafa;
+              user-select: none;
             }
+
             aside {
               width: 240px;
-              padding: 1.25rem 0.875rem;
+              padding: 1.25rem 0.5rem;
               flex-shrink: 0;
               display: flex;
               flex-direction: column;
               gap: 2px;
               border-right: 1px solid var(--pb-border);
               background: var(--pb-surface);
+              height: 100%;
             }
             aside h1 {
               display: flex;
@@ -137,6 +154,9 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               overflow: auto;
               background: var(--pb-bg);
               max-height: 100vh;
+
+              display: flex;
+              flex-direction: column;
             }
             h2 {
               font-size: 1.125rem;
@@ -450,40 +470,38 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
           </style>
         </head>
         <body>
-          <aside>${raw(navHtml)}</aside>
+          <div class="sidebar">
+            <aside>${raw(navHtml)}</aside>
+          </div>
           <main id="main">${raw(content)}</main>
         </body>
       </html>`,
-  );
+	);
 }
 
 interface NavProps {
-  basePath: string;
-  activeSection: "tables" | "schema" | "migrations" | "backups";
-  tables?: string[];
+	basePath: string;
+	activeSection: "tables" | "schema" | "migrations" | "backups";
+	tables?: string[];
 }
 
-export function nav({
-  basePath,
-  activeSection,
-  tables = [],
-}: NavProps): string {
-  const base = basePath.replace(/\/$/, "");
-  const link = (
-    path: string,
-    label: string,
-    section: string,
-    icon?: string,
-  ) => {
-    return html`<a
+export function nav({ basePath, activeSection }: NavProps): string {
+	const base = basePath.replace(/\/$/, "");
+	const link = (
+		path: string,
+		label: string,
+		section: string,
+		icon?: string,
+	) => {
+		return html`<a
       href="${base}${path}"
       ${activeSection === section ? " class=active" : ""}
     >
       ${raw(icon ?? "")} ${label}
     </a>`;
-  };
+	};
 
-  return html` <h1
+	return html` <h1
       style="display:flex;align-items:center;gap:0.5rem;font-size:1.25rem"
     >
       <svg
@@ -511,11 +529,11 @@ export function nav({
       </svg>
     </h1>
     ${raw(
-      link(
-        "/tables",
-        "Tables",
-        "tables",
-        html`<svg
+			link(
+				"/tables",
+				"Tables",
+				"tables",
+				html`<svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
@@ -534,14 +552,14 @@ export function nav({
           <path d="M3 10h18" />
           <path d="M10 3v18" />
         </svg>`.toString(),
-      ),
-    )}
+			),
+		)}
     ${raw(
-      link(
-        "/schema/diagram",
-        "Schema",
-        "schema",
-        html`<svg
+			link(
+				"/schema/diagram",
+				"Schema",
+				"schema",
+				html`<svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
@@ -566,14 +584,14 @@ export function nav({
           <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
           <path d="M12 9l0 3" />
         </svg>`.toString(),
-      ),
-    )}
+			),
+		)}
     ${raw(
-      link(
-        "/migrations",
-        "Migrations",
-        "migrations",
-        html`<svg
+			link(
+				"/migrations",
+				"Migrations",
+				"migrations",
+				html`<svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
@@ -591,14 +609,14 @@ export function nav({
           <path d="M13 16l4 4l4 -4" />
           <path d="M17 10l0 10" />
         </svg>`.toString(),
-      ),
-    )}
+			),
+		)}
     ${raw(
-      link(
-        "/backups",
-        "Backups",
-        "backups",
-        html`<svg
+			link(
+				"/backups",
+				"Backups",
+				"backups",
+				html`<svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
           height="16"
@@ -620,6 +638,6 @@ export function nav({
           <path d="M16 19h6" />
           <path d="M19 16l3 3l-3 3" />
         </svg>`.toString(),
-      ),
-    )}`.toString();
+			),
+		)}`.toString();
 }
