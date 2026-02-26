@@ -171,7 +171,7 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
   const COL_GAP = 80;
   const ROW_GAP = 60;
   const COLS = Math.max(1, Math.ceil(Math.sqrt(schema.length)));
-  const PAD = 40;
+  const PAD = 60;
   const DRAG_EXTRA = 400; // extra canvas room for dragging
 
   const boxes = schema.map((t, i) => {
@@ -194,7 +194,7 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
   const positions: Record<string, { x: number; y: number; h: number }> = {};
   boxes.forEach(({ t, col, row, h }) => {
     positions[t.name] = {
-      x: PAD + col * (BOX_W + COL_GAP),
+      x: PAD / 2 + col * (BOX_W + COL_GAP),
       y: rowYOffsets[row] ?? PAD,
       h,
     };
@@ -557,7 +557,7 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
     html`${header}
       <div data-signals="{_tableName: ''}" style="position:relative">
         <button
-          style="position:absolute;top:1rem;left:1rem;z-index:10"
+          style="position:absolute;top:1rem;left:1rem;z-index:10;background: var(--pb-bg);"
           data-on:click="$createTableDialog.showModal()"
         >
           + New Table
