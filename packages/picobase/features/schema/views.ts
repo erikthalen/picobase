@@ -172,7 +172,6 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
   const ROW_GAP = 60;
   const COLS = Math.max(1, Math.ceil(Math.sqrt(schema.length)));
   const PAD = 60;
-  const DRAG_EXTRA = 400; // extra canvas room for dragging
 
   const boxes = schema.map((t, i) => {
     const col = i % COLS;
@@ -183,12 +182,13 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
 
   const rowYOffsets: number[] = [];
   const numRows = Math.ceil(schema.length / COLS);
-  let y = PAD;
+  let canvasContentH = PAD;
   for (let r = 0; r < numRows; r++) {
-    rowYOffsets[r] = y;
+    rowYOffsets[r] = canvasContentH;
     const rowBoxes = boxes.filter((b) => b.row === r);
-    const maxH = Math.max(...rowBoxes.map((b) => b.h));
-    y += maxH + ROW_GAP;
+    const maxH =
+      rowBoxes.length > 0 ? Math.max(...rowBoxes.map((b) => b.h)) : 0;
+    canvasContentH += maxH + ROW_GAP;
   }
 
   const positions: Record<string, { x: number; y: number; h: number }> = {};
@@ -200,146 +200,12 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
     };
   });
 
-  const svgW = PAD * 2 + COLS * BOX_W + (COLS - 1) * COL_GAP + DRAG_EXTRA;
-  const svgH = y + DRAG_EXTRA;
+  const canvasW = Math.max(
+    2000,
+    PAD * 2 + COLS * BOX_W + (COLS - 1) * COL_GAP + 400,
+  );
+  const canvasH = Math.max(2000, canvasContentH + 400);
 
-  // Each box is a <g transform="translate(x,y)"> so coordinates are relative —
-  // the JS drag handler just updates the transform attribute.
-  const svgBoxes = schema.map((t) => {
-    const pos = positions[t.name]!;
-    const colRows = t.columns.map((c, ci) => {
-      const fk = t.foreignKeys.some((f) => f.from === c.name) ? "⤷ " : "";
-
-      const alt =
-        ci === t.columns.length - 1
-          ? html`<path
-              d="M0 ${BOX_HEADER_H + ci * ROW_H} H${BOX_W} V${BOX_HEADER_H +
-              ci * ROW_H +
-              ROW_H -
-              8} A8 8 0 0 1 ${BOX_W - 8} ${BOX_HEADER_H +
-              ci * ROW_H +
-              ROW_H} H8 A8 8 0 0 1 0 ${BOX_HEADER_H + ci * ROW_H + ROW_H - 8} Z"
-              fill="${ci % 2 === 1
-                ? "var(--pb-diagram-row-alt)"
-                : "var(--pb-bg)"}"
-            />`
-          : html`<rect
-              x="0"
-              y="${BOX_HEADER_H + ci * ROW_H}"
-              width="${BOX_W}"
-              height="${ROW_H}"
-              style="fill:${ci % 2 === 1
-                ? "var(--pb-diagram-row-alt)"
-                : "var(--pb-bg)"}"
-            />`;
-
-      return html`${alt}
-        ${c.pk
-          ? html`<!-- key icon -->
-              <g
-                transform="translate(10,45) scale(0.45)"
-                fill="var(--pb-text-heading)"
-                pointer-events="none"
-              >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                  d="M14.52 2c1.029 0 2.015 .409 2.742 1.136l3.602 3.602a3.877 3.877 0 0 1 0 5.483l-2.643 2.643a3.88 3.88 0 0 1 -4.941 .452l-.105 -.078l-5.882 5.883a3 3 0 0 1 -1.68 .843l-.22 .027l-.221 .009h-1.172c-1.014 0 -1.867 -.759 -1.991 -1.823l-.009 -.177v-1.172c0 -.704 .248 -1.386 .73 -1.96l.149 -.161l.414 -.414a1 1 0 0 1 .707 -.293h1v-1a1 1 0 0 1 .883 -.993l.117 -.007h1v-1a1 1 0 0 1 .206 -.608l.087 -.1l1.468 -1.469l-.076 -.103a3.9 3.9 0 0 1 -.678 -1.963l-.007 -.236c0 -1.029 .409 -2.015 1.136 -2.742l2.643 -2.643a3.88 3.88 0 0 1 2.741 -1.136m.495 5h-.02a2 2 0 1 0 0 4h.02a2 2 0 1 0 0 -4"
-                />
-              </g>`
-          : ""}
-
-        <text
-          x="${10 + (c.pk ? 16 : 0)}"
-          y="${BOX_HEADER_H + 14 + ci * ROW_H + 8}"
-          font-size="11"
-          style="fill:var(--pb-text-heading)"
-          pointer-events="none"
-        >
-          ${fk}${c.name}${c.dflt_value ? ` = ${String(c.dflt_value)}` : ""}
-        </text>
-        <text
-          x="${BOX_W - 10}"
-          y="${BOX_HEADER_H + 14 + ci * ROW_H + 8}"
-          font-size="10"
-          style="fill:var(--pb-text-faint);font-family:var(--pb-monospace);letter-spacing: 0.05em;"
-          text-anchor="end"
-          pointer-events="none"
-          >${c.type || "ANY"}</text
-        >`;
-    });
-
-    return html`<g
-      data-table="${t.name}"
-      data-h="${pos.h}"
-      transform="translate(${pos.x},${pos.y})"
-    >
-      <rect
-        x="0"
-        y="0"
-        width="${BOX_W}"
-        height="${pos.h}"
-        rx="8"
-        style="fill:var(--pb-surface);stroke:var(--pb-border)"
-        stroke-width="1"
-      />
-      <rect
-        x="0"
-        y="0"
-        width="${BOX_W}"
-        height="${BOX_HEADER_H}"
-        rx="8"
-        data-header="true"
-        style="fill:var(--pb-diagram-header);cursor:grab"
-      />
-      <rect
-        x="0"
-        y="${BOX_HEADER_H - 6}"
-        width="${BOX_W}"
-        height="6"
-        style="fill:var(--pb-diagram-header)"
-        pointer-events="none"
-      />
-      <line
-        x1="0"
-        y1="${BOX_HEADER_H}"
-        x2="${BOX_W}"
-        y2="${BOX_HEADER_H}"
-        style="stroke:var(--pb-border)"
-        stroke-width="1"
-        pointer-events="none"
-      />
-      <g
-        transform="translate(12,10) scale(0.55)"
-        stroke="var(--pb-diagram-title)"
-        fill="none"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        pointer-events="none"
-      >
-        <path stroke="none" d="M0 0h24v24H0z" />
-        <path
-          d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14
-             a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"
-        />
-        <path d="M3 10h18" />
-        <path d="M10 3v18" />
-      </g>
-      <text
-        x="30"
-        y="20"
-        font-size="12"
-        font-weight="500"
-        style="fill:var(--pb-diagram-title)"
-        pointer-events="none"
-      >
-        ${t.name}
-      </text>
-      ${colRows}
-    </g>`;
-  });
-
-  // Paths carry data-* attributes so the drag script can recalculate them live.
-  // Rendered before boxes so lines appear behind.
   const svgLines = schema.flatMap((t) =>
     t.foreignKeys.map((fk) => {
       const from = positions[t.name];
@@ -363,7 +229,7 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
         BOX_HEADER_H,
         ROW_H,
       );
-      return html` <path
+      return html`<path
         data-from="${t.name}"
         data-to="${fk.table}"
         data-from-col="${fromColIdx}"
@@ -380,230 +246,286 @@ export function erDiagramView(schema: TableSchema[], basePath: string): string {
           to="-14"
           dur="0.75s"
           repeatCount="indefinite"
-      /></path>`;
+        /></path>`;
     }),
   );
 
-  // Inline drag script — uses SVG's getScreenCTM() for correct coordinate mapping
-  // regardless of scroll position or CSS transforms.
-  const dragScript = html` <script>
-    (function () {
-      var svg = document.currentScript.closest("svg");
-      var BW = ${BOX_W},
-        BH = ${BOX_HEADER_H},
-        RH = ${ROW_H};
-      var pos = {};
-      svg.querySelectorAll("g[data-table]").forEach(function (g) {
-        var m = /translate\\(([-\\d.]+),([-\\d.]+)\\)/.exec(
-          g.getAttribute("transform"),
-        );
-        if (m)
-          pos[g.dataset.table] = {
-            x: parseFloat(m[1]),
-            y: parseFloat(m[2]),
-            h: parseFloat(g.dataset.h),
-          };
-      });
+  const tableBoxes = schema.map((t) => {
+    const pos = positions[t.name]!;
 
-      // Orthogonal path builder — mirrors the server-side routePath function.
-      // Uses only > and >= comparisons (no < in script body for SVG safety).
-      function bp(f, t, fc, tc) {
-        var ST = 10,
-          R = 16;
-        var y1 = f.y + BH + fc * RH + RH / 2;
-        var y2 = t.y + BH + tc * RH + RH / 2;
-        var sv = y2 >= y1 ? 1 : -1;
-        var adx = t.x > f.x ? t.x - f.x : f.x - t.x;
-        var sh = t.x >= f.x ? 1 : -1;
-        var px1 = sh > 0 ? f.x + BW : f.x;
-        var px2 = sh > 0 ? t.x : t.x + BW;
-        var FOLD_THRESHOLD = 50;
-        var willFold =
-          sh > 0
-            ? !(px2 - px1 >= FOLD_THRESHOLD)
-            : !(px1 - px2 >= FOLD_THRESHOLD);
-        // Same-column or fold-back — U-shape via right-side channel
-        if (!(adx >= 2) || willFold) {
-          var cx = f.x > t.x ? f.x + BW + ST : t.x + BW + ST;
-          var vertDist = y2 > y1 ? y2 - y1 : y1 - y2;
-          var r = vertDist / 2 > R ? R : vertDist / 2;
-          if (!(r > 0.5))
-            return "M" + (f.x + BW) + "," + y1 + " H" + cx + " H" + (t.x + BW);
-          var ud =
-            "M" +
-            (f.x + BW) +
-            "," +
-            y1 +
-            " H" +
-            (cx - r) +
-            " Q" +
-            cx +
-            "," +
-            y1 +
-            " " +
-            cx +
-            "," +
-            (y1 + sv * r);
-          var rem = vertDist - 2 * r;
-          if (rem > 0.5) ud += " V" + (y2 - sv * r);
-          ud +=
-            " Q" +
-            cx +
-            "," +
-            y2 +
-            " " +
-            (cx - r) +
-            "," +
-            y2 +
-            " H" +
-            (t.x + BW);
-          return ud;
-        }
-        var ax = px1 + sh * ST,
-          bx = px2 - sh * ST;
-        var ady = y2 > y1 ? y2 - y1 : y1 - y2;
-        if (!(ady >= 2)) return "M" + px1 + "," + y1 + " H" + px2;
-        var vx = (ax + bx) / 2;
-        var yMax = y1 > y2 ? y1 : y2;
-        var yMin = y1 + y2 - yMax;
-        for (var k in pos) {
-          var bb = pos[k];
-          if (
-            vx > bb.x + 2 &&
-            bb.x + BW - 2 > vx &&
-            bb.y + bb.h > yMin &&
-            yMax > bb.y
-          ) {
-            var dl = vx - bb.x,
-              dr = bb.x + BW - vx;
-            vx = dl > dr ? bb.x + BW + R : bb.x - R;
-          }
-        }
-        if (sh > 0) {
-          if (!(vx >= ax + R)) vx = ax + R;
-          if (vx > bx - R) vx = bx - R;
-        } else {
-          if (vx > ax - R) vx = ax - R;
-          if (!(vx >= bx + R)) vx = bx + R;
-        }
-        var r2 = ady / 2 > R ? R : ady / 2;
-        var c1x = vx - sh * r2,
-          c1y = y1 + sv * r2,
-          c2y = y2 - sv * r2,
-          c2x = vx + sh * r2;
-        var d = "M" + px1 + "," + y1 + " H" + ax;
-        var dax = ax > c1x ? ax - c1x : c1x - ax;
-        if (dax > 0.5) d += " H" + c1x;
-        d += " Q" + vx + "," + y1 + " " + vx + "," + c1y;
-        var dv = c1y > c2y ? c1y - c2y : c2y - c1y;
-        if (dv > 0.5) d += " V" + c2y;
-        d += " Q" + vx + "," + y2 + " " + c2x + "," + y2;
-        var dbx = c2x > bx ? c2x - bx : bx - c2x;
-        if (dbx > 0.5) d += " H" + bx;
-        d += " H" + px2;
-        return d;
-      }
+    const colRows = t.columns.map((c, ci) => {
+      const fk = t.foreignKeys.some((f) => f.from === c.name) ? "⤷ " : "";
+      const bg = ci % 2 === 1 ? "var(--pb-diagram-row-alt)" : "var(--pb-bg)";
+      const pkIcon = c.pk
+        ? html`<svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="var(--pb-text-heading)"
+            style="flex-shrink:0;margin-right:5px"
+          >
+            <path
+              d="M14.52 2c1.029 0 2.015 .409 2.742 1.136l3.602 3.602a3.877 3.877 0 0 1 0 5.483l-2.643 2.643a3.88 3.88 0 0 1 -4.941 .452l-.105 -.078l-5.882 5.883a3 3 0 0 1 -1.68 .843l-.22 .027l-.221 .009h-1.172c-1.014 0 -1.867 -.759 -1.991 -1.823l-.009 -.177v-1.172c0 -.704 .248 -1.386 .73 -1.96l.149 -.161l.414 -.414a1 1 0 0 1 .707 -.293h1v-1a1 1 0 0 1 .883 -.993l.117 -.007h1v-1a1 1 0 0 1 .206 -.608l.087 -.1l1.468 -1.469l-.076 -.103a3.9 3.9 0 0 1 -.678 -1.963l-.007 -.236c0 -1.029 .409 -2.015 1.136 -2.742l2.643 -2.643a3.88 3.88 0 0 1 2.741 -1.136m.495 5h-.02a2 2 0 1 0 0 4h.02a2 2 0 1 0 0 -4"
+            />
+          </svg>`
+        : "";
 
-      var drag = null,
-        s0 = null,
-        p0 = null;
-      svg.addEventListener("mousedown", function (e) {
-        if (!e.target.getAttribute || !e.target.getAttribute("data-header"))
-          return;
-        var g = e.target.closest("g[data-table]");
-        if (!g) return;
-        drag = g;
-        var pt = svg.createSVGPoint();
-        pt.x = e.clientX;
-        pt.y = e.clientY;
-        s0 = pt.matrixTransform(svg.getScreenCTM().inverse());
-        p0 = { x: pos[g.dataset.table].x, y: pos[g.dataset.table].y };
-        e.target.style.cursor = "grabbing";
-        e.preventDefault();
-      });
-      window.addEventListener("mousemove", function (e) {
-        if (!drag) return;
-        var pt = svg.createSVGPoint();
-        pt.x = e.clientX;
-        pt.y = e.clientY;
-        var sp = pt.matrixTransform(svg.getScreenCTM().inverse());
-        var nx = p0.x + sp.x - s0.x,
-          ny = p0.y + sp.y - s0.y;
-        pos[drag.dataset.table] = {
-          x: nx,
-          y: ny,
-          h: pos[drag.dataset.table].h,
-        };
-        drag.setAttribute("transform", "translate(" + nx + "," + ny + ")");
-        svg.querySelectorAll("path[data-from]").forEach(function (p) {
-          var f = pos[p.dataset.from],
-            t = pos[p.dataset.to];
-          if (!f || !t) return;
-          p.setAttribute("d", bp(f, t, +p.dataset.fromCol, +p.dataset.toCol));
-        });
-      });
-      window.addEventListener("mouseup", function () {
-        if (drag) {
-          drag.querySelector("rect[data-header]").style.cursor = "grab";
-          drag = null;
-        }
-      });
-    })();
-  </script>`;
+      return html`<div
+        style="height:${ROW_H}px;display:flex;align-items:center;padding:0 10px;background:${bg};pointer-events:none"
+      >
+        ${pkIcon}
+        <span
+          style="font-size:11px;color:var(--pb-text-heading);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          >${fk}${c.name}${c.dflt_value != null
+            ? ` = ${String(c.dflt_value)}`
+            : ""}</span
+        >
+        <span
+          style="font-size:10px;color:var(--pb-text-faint);font-family:var(--pb-monospace);letter-spacing:0.05em;white-space:nowrap;padding-left:8px"
+          >${c.type || "ANY"}</span
+        >
+      </div>`;
+    });
+
+    return html`<div
+      data-table="${t.name}"
+      data-h="${pos.h}"
+      style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${BOX_W}px;border:1px solid var(--pb-border);border-radius:8px;overflow:hidden;background:var(--pb-surface)"
+    >
+      <div
+        data-header="true"
+        style="height:${BOX_HEADER_H}px;display:flex;align-items:center;padding:0 10px;gap:6px;background:var(--pb-diagram-header);border-bottom:1px solid var(--pb-border);cursor:grab"
+      >
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--pb-diagram-title)"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="flex-shrink:0;pointer-events:none"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"
+          />
+          <path d="M3 10h18" />
+          <path d="M10 3v18" />
+        </svg>
+        <span
+          style="font-size:12px;font-weight:500;color:var(--pb-diagram-title);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none"
+          >${t.name}</span
+        >
+      </div>
+      ${colRows}
+    </div>`;
+  });
 
   const base = basePath.replace(/\/$/, "");
 
+  const cameraScript = html`<script>
+    (function () {
+      var container = document.getElementById("diagram-viewport");
+      var wrap = document.getElementById("canvas-wrap");
+      var camera = { x: 0, y: 0, z: 1 };
+
+      function applyCamera() {
+        wrap.style.transform =
+          "scale(" +
+          camera.z +
+          ") translate(" +
+          camera.x +
+          "px," +
+          camera.y +
+          "px)";
+        var el = document.getElementById("zoom-level");
+        if (el) el.textContent = Math.round(camera.z * 100) + "%";
+      }
+
+      function zoomCamera(cx, cy, dz) {
+        var z1 = camera.z;
+        var z2 = Math.max(0.1, Math.min(8, z1 - dz * z1));
+        var p1x = cx / z1 - camera.x,
+          p1y = cy / z1 - camera.y;
+        var p2x = cx / z2 - camera.x,
+          p2y = cy / z2 - camera.y;
+        camera = {
+          x: camera.x + (p2x - p1x),
+          y: camera.y + (p2y - p1y),
+          z: z2,
+        };
+        applyCamera();
+      }
+
+      container.addEventListener(
+        "wheel",
+        function (e) {
+          e.preventDefault();
+          var rect = container.getBoundingClientRect();
+          if (e.ctrlKey || e.metaKey) {
+            zoomCamera(
+              e.clientX - rect.left,
+              e.clientY - rect.top,
+              e.deltaY / 100,
+            );
+          } else {
+            camera = {
+              x: camera.x - e.deltaX / camera.z,
+              y: camera.y - e.deltaY / camera.z,
+              z: camera.z,
+            };
+            applyCamera();
+          }
+        },
+        { passive: false },
+      );
+
+      var isPanning = false,
+        panStart,
+        cameraAtStart;
+      wrap.addEventListener("mousedown", function (e) {
+        if (e.target.closest && e.target.closest("[data-table]")) return;
+        isPanning = true;
+        panStart = { x: e.clientX, y: e.clientY };
+        cameraAtStart = { x: camera.x, y: camera.y, z: camera.z };
+        container.style.cursor = "grabbing";
+        e.preventDefault();
+      });
+      window.addEventListener("mousemove", function (e) {
+        if (!isPanning) return;
+        camera = {
+          x: cameraAtStart.x + (e.clientX - panStart.x) / cameraAtStart.z,
+          y: cameraAtStart.y + (e.clientY - panStart.y) / cameraAtStart.z,
+          z: cameraAtStart.z,
+        };
+        applyCamera();
+      });
+      window.addEventListener("mouseup", function () {
+        if (isPanning) {
+          isPanning = false;
+          container.style.cursor = "";
+        }
+      });
+
+      var btnIn = document.getElementById("zoom-in");
+      var btnOut = document.getElementById("zoom-out");
+      function zoomStep(dir) {
+        var rect = container.getBoundingClientRect();
+        var i = Math.round(camera.z * 100) / 25;
+        var next = Math.max(0.25, (i + dir) * 0.25);
+        zoomCamera(rect.width / 2, rect.height / 2, camera.z - next);
+      }
+      if (btnIn)
+        btnIn.addEventListener("click", function () {
+          zoomStep(1);
+        });
+      if (btnOut)
+        btnOut.addEventListener("click", function () {
+          zoomStep(-1);
+        });
+
+      applyCamera();
+    })();
+  </script>`;
+
   return String(
-    html`${header}
-      <div data-signals="{_tableName: ''}" style="position:relative">
-        <button
-          style="position:absolute;top:1rem;left:1rem;z-index:10;background: var(--pb-bg);"
-          data-on:click="$createTableDialog.showModal()"
-        >
-          + New Table
-        </button>
-
-        <dialog
-          data-ref="createTableDialog"
-          closedby="any"
-          style="left: 50%;top: 50%;translate: -50% -50%;background:var(--pb-surface);border:1px solid var(--pb-border);border-radius:8px;padding:1.5rem;color:var(--pb-text);"
-        >
-          <form>
-            <label>
-              Table name
-              <input
-                type="text"
-                data-bind:_tableName
-                placeholder="e.g. orders"
-                autofocus
-              />
-            </label>
-            <div>
-              <button
-                type="button"
-                data-on:click="@post('${base}/schema/tables'); $createTableDialog.close(); _tableName = ''"
-              >
-                Create
-              </button>
-              <button
-                type="button"
-                data-on:click="$createTableDialog.close(); _tableName = ''"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </dialog>
-
-        <div id="schema-content" style="overflow:auto">
-          <svg
-            width="${svgW}"
-            height="${svgH}"
-            xmlns="http://www.w3.org/2000/svg"
-            style="background:var(--pb-diagram-bg);border-radius:8px;display:block;min-width: 100%;"
+    html`<style>
+        #main {
+          overflow: hidden;
+          height: 100vh;
+        }
+      </style>
+      <div
+        data-signals="{_tableName: ''}"
+        style="display:flex;flex-direction:column;height:100%;overflow:hidden"
+      >
+        ${header}
+        <div style="position:relative;flex:1;min-height:0">
+          <button
+            style="position:absolute;top:1rem;left:1rem;z-index:10;background:var(--pb-bg)"
+            data-on:click="$createTableDialog.showModal()"
           >
-            ${svgLines} ${svgBoxes} ${raw(dragScript)}
-          </svg>
+            + New Table
+          </button>
+
+          <dialog
+            data-ref="createTableDialog"
+            closedby="any"
+            style="left:50%;top:50%;translate:-50% -50%;background:var(--pb-surface);border:1px solid var(--pb-border);border-radius:8px;padding:1.5rem;color:var(--pb-text);"
+          >
+            <form>
+              <label>
+                Table name
+                <input
+                  type="text"
+                  data-bind:_tableName
+                  placeholder="e.g. orders"
+                  autofocus
+                />
+              </label>
+              <div>
+                <button
+                  type="button"
+                  data-on:click="@post('${base}/schema/tables'); $createTableDialog.close(); _tableName = ''"
+                >
+                  Create
+                </button>
+                <button
+                  type="button"
+                  data-on:click="$createTableDialog.close(); _tableName = ''"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </dialog>
+
+          <div
+            id="zoom-controls"
+            style="position:absolute;bottom:1rem;right:1rem;z-index:10;display:flex;align-items:center;gap:4px;background:var(--pb-surface);border:1px solid var(--pb-border);border-radius:8px;padding:4px;"
+          >
+            <button
+              id="zoom-out"
+              style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem"
+            >
+              −
+            </button>
+            <span
+              id="zoom-level"
+              style="min-width:3rem;text-align:center;font-size:0.75rem;color:var(--pb-text-muted);font-family:var(--pb-monospace)"
+            >
+              100%
+            </span>
+            <button
+              id="zoom-in"
+              style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem"
+            >
+              +
+            </button>
+          </div>
+
+          <div
+            id="diagram-viewport"
+            style="width:100%;height:100%;overflow:hidden;background:var(--pb-diagram-bg);"
+          >
+            <div
+              id="canvas-wrap"
+              style="transform-origin:0 0;will-change:transform;position:relative;width:${canvasW}px;height:${canvasH}px;"
+            >
+              <svg
+                width="${canvasW}"
+                height="${canvasH}"
+                xmlns="http://www.w3.org/2000/svg"
+                style="position:absolute;top:0;left:0;pointer-events:none;overflow:visible"
+              >
+                ${svgLines}
+              </svg>
+              ${tableBoxes}
+            </div>
+          </div>
+          ${raw(cameraScript)}
         </div>
       </div>`,
   );
