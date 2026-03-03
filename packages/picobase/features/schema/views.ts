@@ -1,12 +1,82 @@
 import { html, raw } from "hono/html";
 import type { TableSchema, DesiredColumn } from "./queries.ts";
 import { tabBar } from "./components/tab-bar.ts";
-import { tableBox } from "./components/table-box.ts";
+import { tableBox, tableBoxStyles } from "./components/table-box.ts";
 import { svgRelations } from "./components/svg-relations.ts";
 import { cameraScript } from "./components/camera-script.ts";
 import { zoomControls } from "./components/zoom-controls.ts";
 import { createTableDialog } from "./components/create-table-dialog.ts";
 import { editTableDialogShell } from "./components/edit-table-dialog.ts";
+import { editsDialogShell, schemaActions } from "./components/edits-dialog.ts";
+
+const css = String.raw;
+
+const schemaStyles = css`
+  .schema-table {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--pb-border);
+  }
+  .schema-table-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .schema-col-type {
+    color: var(--pb-text-muted);
+    font-family: var(--pb-monospace);
+  }
+`;
+
+const diagramStyles = css`
+  #main {
+    overflow: hidden;
+    height: 100vh;
+  }
+  .er-diagram {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .er-diagram-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+  .er-diagram-controls {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #diagram-viewport {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--pb-diagram-bg);
+  }
+  #canvas-wrap {
+    transform-origin: 0 0;
+    position: relative;
+  }
+  .canvas-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .schema-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+`;
 
 export function schemaListView(
   schema: TableSchema[],
@@ -26,11 +96,11 @@ export function schemaListView(
             c.dflt_value != null
               ? `<span class="text-faint">${String(c.dflt_value)}</span>`
               : "";
-          return `<tr><td>${c.name}</td><td class="text-muted" style="font-family: var(--pb-monospace)">${c.type || "ANY"}</td><td>${pkBadge}${fkBadge}${nnBadge}</td><td>${dflt}</td></tr>`;
+          return `<tr><td>${c.name}</td><td class="schema-col-type">${c.type || "ANY"}</td><td>${pkBadge}${fkBadge}${nnBadge}</td><td>${dflt}</td></tr>`;
         })
         .join("\n");
-      return `<div style="margin-bottom:2rem;border-bottom: 1px solid var(--pb-border);">
-        <h3 style="font-size:1rem;font-weight:500;margin:0.5rem;display:flex;align-items:center;gap:0.25rem">
+      return `<div class="schema-table">
+        <h3 class="schema-table-title">
           <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -66,13 +136,18 @@ export function schemaListView(
           </tbody>
         </table>
       </div>`;
-		})
-		.join("\n");
+    })
+    .join("\n");
 
   return String(
     html`${tabBar()}
-      <div id="schema-content">${raw(tables)}</div>`,
-	);
+      <div id="schema-content">
+        <style>
+          ${schemaStyles}
+        </style>
+        ${raw(tables)}
+      </div>`,
+  );
 }
 
 export function erDiagramView(
@@ -88,12 +163,12 @@ export function erDiagramView(
   const COLS = Math.max(1, Math.ceil(Math.sqrt(schema.length)));
   const PAD = 60;
 
-	const boxes = schema.map((t, i) => {
-		const col = i % COLS;
-		const row = Math.floor(i / COLS);
-		const h = BOX_HEADER_H + t.columns.length * ROW_H;
-		return { t, col, row, h };
-	});
+  const boxes = schema.map((t, i) => {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const h = BOX_HEADER_H + t.columns.length * ROW_H;
+    return { t, col, row, h };
+  });
 
   const rowYOffsets: number[] = [];
   const numRows = Math.ceil(schema.length / COLS);
@@ -106,14 +181,14 @@ export function erDiagramView(
     canvasContentH += maxH + ROW_GAP;
   }
 
-	const positions: Record<string, { x: number; y: number; h: number }> = {};
-	boxes.forEach(({ t, col, row, h }) => {
-		positions[t.name] = {
-			x: PAD / 2 + col * (BOX_W + COL_GAP),
-			y: rowYOffsets[row] ?? PAD,
-			h,
-		};
-	});
+  const positions: Record<string, { x: number; y: number; h: number }> = {};
+  boxes.forEach(({ t, col, row, h }) => {
+    positions[t.name] = {
+      x: PAD / 2 + col * (BOX_W + COL_GAP),
+      y: rowYOffsets[row] ?? PAD,
+      h,
+    };
+  });
 
   const canvasW = Math.max(
     2000,
@@ -125,47 +200,28 @@ export function erDiagramView(
 
   return String(
     html`<style>
-        #main {
-          overflow: hidden;
-          height: 100vh;
-        }
+        ${diagramStyles}
+        ${tableBoxStyles}
       </style>
-      <div
-        data-signals="{_tableName: ''}"
-        style="display:flex;flex-direction:column;height:100%;overflow:hidden"
-      >
+      <div data-signals="{_tableName: ''}" class="er-diagram">
         ${tabBar()}
-        <div style="position:relative;flex:1;min-height:0">
-          <div
-            style="position:absolute;top:1rem;left:1rem;z-index:10;display:flex;align-items:center;gap:0.5rem"
-          >
-            ${createTableDialog(base)}
-            ${pendingCount > 0
-              ? html`<button
-                  id="publish-btn"
-                  class="primary"
-                  data-on:click="@post('${base}/schema/publish')"
-                >
-                  Publish (${pendingCount})
-                </button>`
-              : html`<span id="publish-btn" style="display:none"></span>`}
+        <div class="er-diagram-body">
+          <div class="er-diagram-controls">
+            ${createTableDialog(base)} ${schemaActions(base, pendingCount)}
           </div>
 
-          ${editTableDialogShell()} ${zoomControls()}
+          ${editTableDialogShell()} ${editsDialogShell()} ${zoomControls()}
 
-          <div
-            id="diagram-viewport"
-            style="width:100%;height:100%;overflow:hidden;background:var(--pb-diagram-bg);"
-          >
+          <div id="diagram-viewport">
             <div
               id="canvas-wrap"
-              style="transform-origin:0 0;position:relative;width:${canvasW}px;height:${canvasH}px;"
+              style="width:${canvasW}px;height:${canvasH}px;touch-action: none;"
             >
               <svg
                 width="${canvasW}"
                 height="${canvasH}"
                 xmlns="http://www.w3.org/2000/svg"
-                style="position:absolute;top:0;left:0;pointer-events:none;overflow:visible"
+                class="canvas-svg"
               >
                 ${svgRelations(schema, positions, BOX_W, BOX_HEADER_H, ROW_H)}
               </svg>
@@ -185,5 +241,5 @@ export function erDiagramView(
           ${cameraScript(BOX_W, BOX_HEADER_H, ROW_H)}
         </div>
       </div>`,
-	);
+  );
 }

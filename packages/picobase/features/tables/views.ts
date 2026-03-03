@@ -1,13 +1,79 @@
 import { html, raw } from "hono/html";
 import type { Column } from "./queries.ts";
 
+const css = String.raw;
+
+const emptyStateStyles = css`
+  #tables-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 60vh;
+    gap: 1rem;
+    text-align: center;
+    padding: 2rem;
+  }
+  .empty-state-icon {
+    color: var(--pb-text-faint);
+  }
+  .empty-state-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  .empty-state-heading {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pb-text-heading);
+  }
+  .empty-state-body {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--pb-text-muted);
+    max-width: 25ch;
+  }
+  .empty-state-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4375rem 0.875rem;
+    border: 1px solid var(--pb-border-input);
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--pb-text-heading);
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .empty-state-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+`;
+
+const rowsStyles = css`
+  .rows-wrapper {
+    display: contents;
+  }
+  .row-count {
+    margin: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .pk-cell {
+    font-size: 0.8rem;
+  }
+`;
+
 export function tableListView(tables: string[], basePath: string): string {
 	const base = basePath.replace(/\/$/, "");
 	if (tables.length === 0) {
 		return String(
-			html`<div
-        style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:60vh;gap:1rem;text-align:center;padding:2rem;"
-      >
+			html`<div id="tables-empty-state">
+        <style>
+          ${emptyStateStyles}
+        </style>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -18,7 +84,7 @@ export function tableListView(tables: string[], basePath: string): string {
           stroke-width="1.5"
           stroke-linecap="round"
           stroke-linejoin="round"
-          style="color:var(--pb-text-faint)"
+          class="empty-state-icon"
         >
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path
@@ -27,20 +93,16 @@ export function tableListView(tables: string[], basePath: string): string {
           <path d="M3 10h18" />
           <path d="M10 3v18" />
         </svg>
-        <div style="display:flex;flex-direction:column;gap:0.375rem">
-          <p style="font-size:0.75rem;font-weight:500;color:var(--pb-text-heading)">
-            No tables yet
-          </p>
-          <p style="font-size:0.75rem;line-height:1.4;color:var(--pb-text-muted);max-width:25ch;">
+        <div class="empty-state-text">
+          <p class="empty-state-heading">No tables yet</p>
+          <p class="empty-state-body">
             Create a table in the Schema view to get started.
           </p>
         </div>
         <a
           href="${base}/schema/diagram"
           data-on:click="@get('${base}/schema/diagram')"
-          style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.4375rem 0.875rem;border:1px solid var(--pb-border-input);border-radius:6px;font-size:0.8125rem;font-weight:500;color:var(--pb-text-heading);text-decoration:none;transition:background 0.12s,border-color 0.12s;"
-          onmouseover="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.2)'"
-          onmouseout="this.style.background='';this.style.borderColor=''"
+          class="empty-state-link"
         >
           Go to Schema
         </a>
@@ -137,7 +199,7 @@ export function rowsView(opts: {
           </span>
           ${page < totalPages ? `<button class="pagination-btn" data-on:click="${pageUrl(page + 1)}">Next &#8250;</button>` : `<button class="pagination-btn" disabled>Next &#8250;</button>`}
         </nav>`
-			: `<p class="text-muted" style="margin:0.5rem;font-size:0.8rem">${total} row${total !== 1 ? "s" : ""}</p>`;
+			: `<p class="text-muted row-count">${total} row${total !== 1 ? "s" : ""}</p>`;
 
 	// Insert row — one input per non-PK column, pinned to bottom of table
 	const insertCols = columns.filter((c) => !c.pk);
@@ -147,7 +209,7 @@ export function rowsView(opts: {
 
 	const insertCells = columns
 		.map((c) => {
-			if (c.pk) return `<td class="text-faint" style="font-size:0.8rem">—</td>`;
+			if (c.pk) return `<td class="text-faint pk-cell">—</td>`;
 			const hasDefault = c.dflt_value != null;
 			const placeholder = hasDefault
 				? `default: ${c.dflt_value}`
@@ -168,7 +230,10 @@ export function rowsView(opts: {
 			: "";
 
 	return String(
-		html`<div style="display:contents;" data-signals="${raw(signalsAttr)}">
+		html`<div id="rows-view" class="rows-wrapper" data-signals="${raw(signalsAttr)}">
+      <style>
+        ${rowsStyles}
+      </style>
       ${raw(tabBar)}
       <table>
         <thead>

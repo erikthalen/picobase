@@ -8,6 +8,7 @@ import {
   getAllPendingChanges,
   getPendingForTable,
   clearPendingChanges,
+  deletePendingForTable,
   generateDiffSQL,
   getForeignKeys,
 } from "./queries.ts";
@@ -20,6 +21,10 @@ import {
   editTableDialogContent,
   newEmptyColRow,
 } from "./components/edit-table-dialog.ts";
+import {
+  editsDialogContent,
+  schemaActions,
+} from "./components/edits-dialog.ts";
 import {
   saveMigration,
   ensureMigrationsTable,
@@ -149,7 +154,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
     return sseAction(c, async ({ patchSignals, patchElements }) => {
       await patchSignals(signals);
       await patchElements(
-        `<div id="edit-dialog-body" style="overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:0">${bodyHtml}</div>`,
+        `<div id="edit-dialog-body">${bodyHtml}</div>`,
       );
     });
   });
@@ -221,6 +226,55 @@ export function createSchemaRouter(): Hono<AppEnv> {
     const content = erDiagramView(schema, base, pending);
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
+    });
+  });
+
+  // Return dialog content listing all pending changes with their SQL
+  app.get("/edits-dialog", async (c) => {
+    const db = c.get("db");
+    const config = c.get("config");
+    const base = config.basePath.replace(/\/$/, "");
+    ensurePendingChangesTable(db);
+    const allPending = getAllPendingChanges(db);
+    const entries = allPending.map(({ tableName, desiredColumns }) => {
+      const current = getColumns(db, tableName);
+      const currentFKs = getForeignKeys(db, tableName);
+      const sql = generateDiffSQL(tableName, current, desiredColumns, currentFKs);
+      return { tableName, sql };
+    });
+    const bodyHtml = String(editsDialogContent(entries, base));
+    return sseAction(c, async ({ patchElements }) => {
+      await patchElements(
+        `<div id="edits-dialog-body">${bodyHtml}</div>`,
+      );
+    });
+  });
+
+  // Remove pending changes for a single table
+  app.delete("/tables/:name/pending", async (c) => {
+    const db = c.get("db");
+    const config = c.get("config");
+    const base = config.basePath.replace(/\/$/, "");
+    const tableName = c.req.param("name");
+    ensurePendingChangesTable(db);
+    deletePendingForTable(db, tableName);
+    const allPending = getAllPendingChanges(db);
+    const pendingCount = allPending.length;
+    const entries = allPending.map(({ tableName: tName, desiredColumns }) => {
+      const current = getColumns(db, tName);
+      const currentFKs = getForeignKeys(db, tName);
+      const sql = generateDiffSQL(tName, current, desiredColumns, currentFKs);
+      return { tableName: tName, sql };
+    });
+    const bodyHtml = String(editsDialogContent(entries, base));
+    return sseAction(c, async ({ patchElements }) => {
+      await patchElements(
+        `<div id="edits-dialog-body">${bodyHtml}</div>`,
+      );
+      await patchElements(String(schemaActions(base, pendingCount)));
+      await patchElements(
+        `<span id="pending-dot-${tableName}" style="display:none"></span>`,
+      );
     });
   });
 

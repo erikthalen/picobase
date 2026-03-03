@@ -369,7 +369,7 @@ export function cameraScript(
         panStart = null,
         cameraAtStart = null;
 
-      wrap.addEventListener("mousedown", function (e) {
+      wrap.addEventListener("pointerdown", function (e) {
         var header = e.target.closest("[data-header]");
         if (header) {
           var box = header.closest("[data-table]");
@@ -393,7 +393,7 @@ export function cameraScript(
         e.preventDefault();
       });
 
-      window.addEventListener("mousemove", function (e) {
+      window.addEventListener("pointermove", function (e) {
         if (isDragging) {
           var dx = (e.clientX - dragStart.x) / camera.z;
           var dy = (e.clientY - dragStart.y) / camera.z;
@@ -418,7 +418,7 @@ export function cameraScript(
         }
       });
 
-      window.addEventListener("mouseup", function () {
+      window.addEventListener("pointerup", function () {
         if (isDragging) {
           dragEl.querySelector("[data-header]").style.cursor = "grab";
           isDragging = false;

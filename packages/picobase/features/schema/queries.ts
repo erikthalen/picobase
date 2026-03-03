@@ -50,6 +50,10 @@ export function clearPendingChanges(db: DatabaseSync): void {
   db.exec('DELETE FROM _picobase_pending_changes')
 }
 
+export function deletePendingForTable(db: DatabaseSync, tableName: string): void {
+  db.prepare('DELETE FROM _picobase_pending_changes WHERE table_name = ?').run(tableName)
+}
+
 // ── SQL diff generation ────────────────────────────────────────────────────
 
 function quoteIdent(name: string): string {

@@ -56,7 +56,7 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
 				`<main id="main">${backupsView({ backups, basePath: base })}</main>`,
 			);
 			await patchElements(
-				`<div id="backup-status" style="padding:0.75rem;background:var(--pb-badge-fk-bg);border-radius:6px;margin-bottom:1rem;color:var(--pb-badge-fk-fg)">Restored from <strong>${name}</strong>. A safety backup was created automatically.</div>`,
+				`<div id="backup-status" class="backup-status-success">Restored from <strong>${name}</strong>. A safety backup was created automatically.</div>`,
 			);
 		});
 	});

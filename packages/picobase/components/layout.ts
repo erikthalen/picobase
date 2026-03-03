@@ -126,6 +126,9 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               z-index: 10;
               margin: 0.75rem;
               display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              font-size: 1.25rem;
 
               @media (width > 600px) {
                 position: relative;
@@ -538,7 +541,6 @@ export function nav({ basePath, activeSection }: NavProps): string {
   };
 
   return html` <h1
-      style="display:flex;align-items:center;gap:0.5rem;font-size:1.25rem"
     >
       <svg
         height="16"
