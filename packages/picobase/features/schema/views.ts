@@ -1,6 +1,5 @@
 import { html, raw } from "hono/html";
 import type { TableSchema, DesiredColumn } from "./queries.ts";
-import { tabBar } from "./components/tab-bar.ts";
 import { tableBox, tableBoxStyles } from "./components/table-box.ts";
 import { svgRelations } from "./components/svg-relations.ts";
 import { cameraScript } from "./components/camera-script.ts";
@@ -49,11 +48,29 @@ const diagramStyles = css`
   .er-diagram-controls {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 10;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 6px;
+  }
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 10px;
+    padding: 3px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .ctrl-group button {
+    border: none;
+    border-radius: 7px;
+  }
+  .ctrl-group button:hover {
+    border-color: transparent;
   }
   #diagram-viewport {
     width: 100%;
@@ -194,7 +211,8 @@ export function erDiagramView(
         <div data-signals="{_tableName: ''}" class="er-diagram">
           <div class="er-diagram-body">
             <div class="er-diagram-controls">
-              ${createTableDialog(base)} ${schemaActions(base, 0)}
+              <div class="ctrl-group">${createTableDialog(base)}</div>
+              ${schemaActions(base, 0)}
             </div>
             ${editTableDialogShell()} ${editsDialogShell()}
             <div id="diagram-viewport">
@@ -300,13 +318,14 @@ export function erDiagramView(
         ${tableBoxStyles}
       </style>
       <div data-signals="{_tableName: ''}" class="er-diagram">
-        ${tabBar()}
         <div class="er-diagram-body">
           <div class="er-diagram-controls">
-            ${createTableDialog(base)} ${schemaActions(base, pendingCount)}
+            <div class="ctrl-group">${createTableDialog(base)}</div>
+            <div class="ctrl-group">${zoomControls()}</div>
+            ${schemaActions(base, pendingCount)}
           </div>
 
-          ${editTableDialogShell()} ${editsDialogShell()} ${zoomControls()}
+          ${editTableDialogShell()} ${editsDialogShell()}
 
           <div id="diagram-viewport">
             <div

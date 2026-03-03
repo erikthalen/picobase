@@ -21,7 +21,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 			return c.redirect(`${base}/tables/${tables[0]}`);
 		}
 		const content = tableListView(tables, base);
-		const navHtml = nav({ basePath: base, activeSection: "tables", tables });
+		const navHtml = nav({ basePath: base, activeSection: "schema", tables });
 		return respond(c, {
 			fullPage: () => layout({ title: "Tables", nav: navHtml, content }),
 			fragment: () => `<main id="main">${content}</main>`,
@@ -52,7 +52,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 			limit: LIMIT,
 			basePath: base,
 		});
-		const navHtml = nav({ basePath: base, activeSection: "tables", tables });
+		const navHtml = nav({ basePath: base, activeSection: "schema", tables });
 		return respond(c, {
 			fullPage: () => layout({ title: tableName, nav: navHtml, content }),
 			fragment: () => `<main id="main">${content}</main>`,

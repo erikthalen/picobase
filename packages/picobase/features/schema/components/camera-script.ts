@@ -369,7 +369,7 @@ export function cameraScript(
         panStart = null,
         cameraAtStart = null;
 
-      wrap.addEventListener("pointerdown", function (e) {
+      container.addEventListener("pointerdown", function (e) {
         var header = e.target.closest("[data-header]");
         if (header) {
           var box = header.closest("[data-table]");

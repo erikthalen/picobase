@@ -88,7 +88,7 @@ export function tableListView(tables: string[], basePath: string): string {
           </p>
           <button
             class="primary"
-            data-on:click="@get('${base}/schema/diagram')"
+            data-on:click="@get('${base}/schema')"
           >
             Go to Schema
           </button>

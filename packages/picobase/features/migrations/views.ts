@@ -49,7 +49,6 @@ const styles = css`
     gap: 0.5rem;
   }
   .new-migration-btn {
-    margin-inline: 1rem;
   }
   .migrations-empty {
     display: flex;

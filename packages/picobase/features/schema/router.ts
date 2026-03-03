@@ -59,7 +59,8 @@ export function createSchemaRouter(): Hono<AppEnv> {
     ensurePendingChangesTable(db);
     const tables = listTables(db);
     const schema = getFullSchema(db);
-    const content = schemaListView(schema, base);
+    const pending = getPendingColumnsMap(db);
+    const content = erDiagramView(schema, base, pending);
     const navHtml = nav({ basePath: base, activeSection: "schema", tables });
     return respond(c, {
       fullPage: () => layout({ title: "Schema", nav: navHtml, content }),
@@ -67,18 +68,17 @@ export function createSchemaRouter(): Hono<AppEnv> {
     });
   });
 
-  app.get("/diagram", async (c) => {
+  app.get("/table", async (c) => {
     const db = c.get("db");
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     ensurePendingChangesTable(db);
     const tables = listTables(db);
     const schema = getFullSchema(db);
-    const pending = getPendingColumnsMap(db);
-    const content = erDiagramView(schema, base, pending);
+    const content = schemaListView(schema, base);
     const navHtml = nav({ basePath: base, activeSection: "schema", tables });
     return respond(c, {
-      fullPage: () => layout({ title: "ER Diagram", nav: navHtml, content }),
+      fullPage: () => layout({ title: "Schema", nav: navHtml, content }),
       fragment: () => `<main id="main">${content}</main>`,
     });
   });
@@ -149,7 +149,12 @@ export function createSchemaRouter(): Hono<AppEnv> {
           fkRef: String(body[`editcol_${i}_fkref`] ?? ""),
         });
       }
-      db.exec(generateCreateTableSQL(tableName, cols));
+      const sql = generateCreateTableSQL(tableName, cols);
+      db.exec(sql);
+      ensureMigrationsTable(db);
+      const filename = nextMigrationFilename(config.migrationsDir);
+      saveMigration(config.migrationsDir, filename, sql);
+      db.prepare("INSERT INTO _picobase_migrations (name) VALUES (?)").run(filename);
     }
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);

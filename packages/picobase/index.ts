@@ -37,7 +37,7 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
   });
 
   app.get("/", (c) =>
-    c.redirect(`${resolved.basePath.replace(/\/$/, "")}/tables`),
+    c.redirect(`${resolved.basePath.replace(/\/$/, "")}/schema`),
   );
 
   app.route("/tables", createTablesRouter());

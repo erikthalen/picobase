@@ -99,90 +99,72 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
             }
             body {
               font-family: var(--pb-sans-serif);
-              display: flex;
               min-height: 100vh;
               background: var(--pb-bg);
               color: #fafafa;
               user-select: none;
             }
-
-            aside {
-              flex-shrink: 0;
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
-              border-right: 1px solid var(--pb-border);
-              background: var(--pb-surface);
-
-              height: 100%;
-              overflow: visible;
-
-              @media (width > 600px) {
-                padding: 1.25rem 0.875rem;
-                width: 240px;
-              }
-            }
-            aside h1 {
-              position: absolute;
-              z-index: 10;
-              margin: 0.75rem;
+            .site-logo {
+              position: fixed;
+              top: 0;
+              left: 0;
+              z-index: 100;
+              padding: 0.75rem;
               display: flex;
               align-items: center;
               gap: 0.5rem;
-              font-size: 1.25rem;
-
-              @media (width > 600px) {
-                position: relative;
-                padding: 0.375rem 0.625rem;
-                margin: 0;
-                margin-bottom: 2rem;
-              }
             }
-            aside h1 svg:nth-child(2) {
-              display: none;
-              @media (width > 600px) {
-                display: block;
-              }
+            .floating-nav {
+              position: fixed;
+              bottom: 1.5rem;
+              left: 50%;
+              transform: translateX(-50%);
+              display: flex;
+              background: var(--pb-surface);
+              border: 1px solid var(--pb-border);
+              border-radius: 10px;
+              padding: 3px;
+              gap: 2px;
+              z-index: 100;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             }
-            aside a {
-              display: none;
-              gap: 0.625rem;
+            .floating-nav a {
+              display: flex;
               align-items: center;
-              padding: 0.4375rem 0.625rem;
-              text-decoration: none;
-              border-radius: 6px;
+              gap: 0.5rem;
+              padding: 0.4rem 0.875rem;
+              height: 28px;
+              border-radius: 7px;
               font-size: 0.8125rem;
               font-weight: 500;
               color: var(--pb-text-muted);
+              text-decoration: none;
+              white-space: nowrap;
               transition:
                 background 0.12s,
                 color 0.12s;
-
-              @media (width > 600px) {
-                display: flex;
-              }
             }
-            aside a svg {
+            .floating-nav a svg {
               flex-shrink: 0;
               opacity: 0.65;
               transition: opacity 0.12s;
             }
-            aside a:hover {
+            .floating-nav a:hover {
               background: var(--pb-nav-hover);
-              color: #e4e4e7;
+              color: var(--pb-text-heading);
             }
-            aside a:hover svg {
+            .floating-nav a:hover svg {
               opacity: 0.8;
             }
-            aside a.active {
-              background: rgba(255, 255, 255, 0.08);
+            .floating-nav a.active {
+              background: rgba(255, 255, 255, 0.1);
               color: #fafafa;
             }
-            aside a.active svg {
+            .floating-nav a.active svg {
               opacity: 1;
             }
             main {
-              flex: 1;
+              width: 100%;
               overflow: auto;
               background: var(--pb-bg);
               max-height: 100vh;
@@ -310,6 +292,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               background: rgba(255, 255, 255, 0.02);
             }
             button {
+              height: 28px;
               user-select: none;
               cursor: pointer;
               padding: 0.375rem 0.75rem;
@@ -513,9 +496,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
           </style>
         </head>
         <body>
-          <div class="sidebar">
-            <aside>${raw(navHtml)}</aside>
-          </div>
+          ${raw(navHtml)}
           <main id="main">${raw(content)}</main>
         </body>
       </html>`,
@@ -524,27 +505,23 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
 
 interface NavProps {
   basePath: string;
-  activeSection: "tables" | "schema" | "migrations" | "backups";
+  activeSection: "schema" | "migrations" | "backups";
   tables?: string[];
 }
 
 export function nav({ basePath, activeSection }: NavProps): string {
   const base = basePath.replace(/\/$/, "");
-  const link = (
-    path: string,
-    label: string,
-    section: string,
-    icon?: string,
-  ) => {
-    return html`<a
+
+  const link = (path: string, label: string, section: string, icon: string) =>
+    html`<a
       href="${base}${path}"
       ${activeSection === section ? " class=active" : ""}
     >
-      ${raw(icon ?? "")} ${label}
+      ${raw(icon)} ${label}
     </a>`;
-  };
 
-  return html` <h1>
+  return String(html`
+    <div class="site-logo">
       <svg
         height="16"
         viewBox="0 0 170 170"
@@ -568,49 +545,23 @@ export function nav({ basePath, activeSection }: NavProps): string {
           fill="currentColor"
         />
       </svg>
-    </h1>
-    ${raw(
-      link(
-        "/tables",
-        "Tables",
-        "tables",
-        html`<svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="icon icon-tabler icons-tabler-outline icon-tabler-table"
-        >
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"
-          />
-          <path d="M3 10h18" />
-          <path d="M10 3v18" />
-        </svg>`.toString(),
-      ),
-    )}
-    ${raw(
-      link(
-        "/schema/diagram",
+    </div>
+
+    <nav class="floating-nav">
+      ${link(
+        "/schema",
         "Schema",
         "schema",
         html`<svg
           xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap"
         >
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path
@@ -625,24 +576,21 @@ export function nav({ basePath, activeSection }: NavProps): string {
           <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
           <path d="M12 9l0 3" />
         </svg>`.toString(),
-      ),
-    )}
-    ${raw(
-      link(
+      )}
+      ${link(
         "/migrations",
         "Migrations",
         "migrations",
         html`<svg
           xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="icon icon-tabler icons-tabler-outline icon-tabler-switch-vertical"
         >
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M3 8l4 -4l4 4" />
@@ -650,24 +598,21 @@ export function nav({ basePath, activeSection }: NavProps): string {
           <path d="M13 16l4 4l4 -4" />
           <path d="M17 10l0 10" />
         </svg>`.toString(),
-      ),
-    )}
-    ${raw(
-      link(
+      )}
+      ${link(
         "/backups",
         "Backups",
         "backups",
         html`<svg
           xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="icon icon-tabler icons-tabler-outline icon-tabler-database-export"
         >
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path
@@ -679,6 +624,7 @@ export function nav({ basePath, activeSection }: NavProps): string {
           <path d="M16 19h6" />
           <path d="M19 16l3 3l-3 3" />
         </svg>`.toString(),
-      ),
-    )}`.toString();
+      )}
+    </nav>
+  `);
 }

@@ -4,17 +4,7 @@ const css = String.raw;
 
 const styles = css`
   #zoom-controls {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--pb-surface);
-    border: 1px solid var(--pb-border);
-    border-radius: 8px;
-    padding: 4px;
+    display: contents;
   }
   .zoom-btn {
     width: 28px;
@@ -23,6 +13,8 @@ const styles = css`
     display: flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    border-radius: 7px;
   }
   #zoom-level {
     min-width: 3rem;
@@ -30,6 +22,7 @@ const styles = css`
     font-size: 0.75rem;
     color: var(--pb-text-muted);
     font-family: var(--pb-monospace);
+    padding: 0 4px;
   }
 `;
 

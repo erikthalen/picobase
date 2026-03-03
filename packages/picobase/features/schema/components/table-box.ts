@@ -9,7 +9,7 @@ export const tableBoxStyles = css`
     position: absolute;
     border: 1px solid var(--pb-border);
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     background: var(--pb-surface);
   }
   .table-box-header {
@@ -18,6 +18,11 @@ export const tableBoxStyles = css`
     position: relative;
     background: var(--pb-diagram-header);
     border-bottom: 1px solid var(--pb-border);
+    border-radius: 8px 8px 0 0;
+  }
+  .table-box-rows {
+    overflow: hidden;
+    border-radius: 0 0 8px 8px;
   }
   .table-box-header-inner {
     display: flex;
@@ -42,7 +47,8 @@ export const tableBoxStyles = css`
     flex: 1;
     pointer-events: none;
   }
-  .table-box-edit-btn {
+  .table-box-edit-btn,
+  .table-box-link-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -50,6 +56,53 @@ export const tableBoxStyles = css`
     color: var(--pb-text-faint);
     display: flex;
     align-items: center;
+    text-decoration: none;
+    position: relative;
+    height: 28px;
+  }
+  .table-box-edit-btn:hover,
+  .table-box-link-btn:hover {
+    background: none;
+    color: var(--pb-text-muted);
+  }
+  .table-box-edit-btn::before,
+  .table-box-link-btn::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + calc(6px / var(--pb-zoom, 1)));
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: #fff;
+    padding: calc(4px / var(--pb-zoom, 1)) calc(8px / var(--pb-zoom, 1));
+    border-radius: calc(6px / var(--pb-zoom, 1));
+    font-size: calc(11px / var(--pb-zoom, 1));
+    font-weight: 400;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .table-box-edit-btn::after,
+  .table-box-link-btn::after {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .table-box-edit-btn:hover::before,
+  .table-box-link-btn:hover::before,
+  .table-box-edit-btn:hover::after,
+  .table-box-link-btn:hover::after {
+    opacity: 1;
   }
   .table-box-pending-dot {
     width: 7px;
@@ -187,12 +240,34 @@ export function tableBox(
           <path d="M3 10h18" />
           <path d="M10 3v18" />
         </svg>
-        <span class="table-box-title">
-          ${t.name}
-        </span>
+        <span class="table-box-title"> ${t.name} </span>
+        <a
+          href="${base}/tables/${t.name}"
+          data-tooltip="Browse table"
+          data-on:click="@get('${base}/tables/${t.name}')"
+          class="table-box-link-btn"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 15l6 -6" />
+            <path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" />
+            <path
+              d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"
+            />
+          </svg>
+        </a>
         <button
           type="button"
-          title="Edit table"
+          data-tooltip="Edit table"
           data-on:click="$_editTableDialog.showModal(); @get('${base}/schema/tables/${t.name}/edit-dialog')"
           class="table-box-edit-btn"
         >
@@ -215,6 +290,6 @@ export function tableBox(
         ${pendingDot}
       </div>
     </div>
-    ${colRows}
+    <div class="table-box-rows">${colRows}</div>
   </div>`;
 }
