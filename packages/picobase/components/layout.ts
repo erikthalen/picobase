@@ -54,7 +54,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               --pb-bg: #09090b;
               --pb-surface: #111113;
               --pb-th-bg: #27272c;
-              --pb-diagram-bg: #1f1f1f;
+              --pb-diagram-bg: #0d0d0d;
               --pb-nav-hover: rgba(255, 255, 255, 0.05);
 
               --pb-border: rgb(255 255 255 / 14%);
