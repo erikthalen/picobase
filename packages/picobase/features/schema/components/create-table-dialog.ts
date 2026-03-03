@@ -8,7 +8,7 @@ export function createTableDialog(base: string) {
 
     <button
       class="create-table-button"
-      data-on:click="$_createTableDialog.showModal()"
+      data-on:click="$_editTableDialog.showModal(); @get('${base}/schema/new-table-dialog')"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -27,38 +27,6 @@ export function createTableDialog(base: string) {
       </svg>
       New Table
     </button>
-
-    <dialog
-      class="create-table-dialog"
-      data-ref="_createTableDialog"
-      closedby="any"
-    >
-      <form>
-        <label>
-          Table name
-          <input
-            type="text"
-            data-bind:_tableName
-            placeholder="e.g. orders"
-            autofocus
-          />
-        </label>
-        <div>
-          <button
-            type="button"
-            data-on:click="@post('${base}/schema/tables'); $_createTableDialog.close(); _tableName = ''"
-          >
-            Create
-          </button>
-          <button
-            type="button"
-            data-on:click="$_createTableDialog.close(); _tableName = ''"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </dialog>
   `;
 }
 

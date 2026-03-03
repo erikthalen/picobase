@@ -114,6 +114,14 @@ function tableRecreationSQL(
   return parts.filter((s) => s !== '').join('\n')
 }
 
+export function generateCreateTableSQL(tableName: string, cols: DesiredColumn[]): string {
+  const defs: string[] = [`${quoteIdent('id')} INTEGER PRIMARY KEY`]
+  for (const col of cols) {
+    if (col.name) defs.push(buildColumnDef(col))
+  }
+  return `CREATE TABLE ${quoteIdent(tableName)} (${defs.join(', ')})`
+}
+
 export function generateDiffSQL(
   tableName: string,
   current: Column[],

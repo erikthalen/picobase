@@ -1,1 +1,0 @@
-ALTER TABLE "albums" ADD COLUMN "RecordId" TEXT REFERENCES "customers" ("CustomerId");

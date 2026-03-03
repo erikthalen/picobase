@@ -49,7 +49,6 @@ const shellStyles = css`
 const contentStyles = css`
   #edit-dialog-body {
     overflow-y: auto;
-    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -59,7 +58,7 @@ const contentStyles = css`
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1rem;
-    padding: 1rem;
+    padding: 0.5rem;
     border-bottom: 1px solid var(--pb-border);
   }
   .etd-header h2 {
@@ -78,7 +77,7 @@ const contentStyles = css`
   .etd-col-labels {
     display: flex;
     gap: 8px;
-    padding: 4px 0 6px;
+    padding: 0.5rem;
     font-size: 0.72rem;
     font-weight: 600;
     color: var(--pb-text-faint);
@@ -89,6 +88,7 @@ const contentStyles = css`
     justify-content: space-between;
     align-items: center;
     margin-top: 1rem;
+    padding: 0.5rem;
     padding-top: 1rem;
   }
   .etd-footer-actions {
@@ -99,7 +99,7 @@ const contentStyles = css`
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+    padding: 0.5rem;
     border-bottom: 1px solid var(--pb-border);
   }
   .edit-col-row--pk {
@@ -149,6 +149,25 @@ const contentStyles = css`
   .col-deleted input,
   .col-deleted select {
     pointer-events: none;
+  }
+  .etd-table-name-input {
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--pb-text);
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+    outline: none;
+  }
+  .etd-table-name-input:focus {
+    border-bottom-color: var(--pb-border);
+  }
+  .etd-table-name-input::placeholder {
+    color: var(--pb-text-faint);
+    font-weight: 400;
   }
 `;
 
@@ -435,8 +454,98 @@ export function newEmptyColRow(
         data-on:click="$editcol_${i}_deleted = !$editcol_${i}_deleted"
         class="edit-col-row-delete"
       >
-        ×
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="icon icon-tabler icons-tabler-outline icon-tabler-x"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M18 6l-12 12" />
+          <path d="M6 6l12 12" />
+        </svg>
       </button>
+    </div>
+  `;
+}
+
+/** Dialog body for creating a brand-new table — opened via the "New Table" button */
+export function newTableDialogContent(base: string) {
+  return html`
+    <style>
+      ${contentStyles}
+    </style>
+
+    <div class="etd-header">
+      <input
+        data-bind:newtablename
+        placeholder="table_name"
+        class="etd-table-name-input"
+        autofocus
+      />
+      <button
+        type="button"
+        data-on:click="$_editTableDialog.close()"
+        class="etd-close-btn"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M18 6l-12 12" />
+          <path d="M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="etd-col-labels">
+      <span class="col-name">Name</span>
+      <span class="col-type">Type</span>
+      <span class="col-default">Default</span>
+      <span class="col-fkref">Ref</span>
+      <span class="col-notnull-label">Not null</span>
+      <span class="col-delete-placeholder"></span>
+    </div>
+
+    <div id="edit-dialog-col-list"></div>
+
+    <datalist id="col-defaults">
+      ${DEFAULT_SUGGESTIONS.map((s) => html`<option value="${s}"></option>`)}
+    </datalist>
+
+    <div class="etd-footer">
+      <button
+        type="button"
+        data-on:click="@get('${base}/schema/tables/new-col-row?idx=' + $editColCount)"
+      >
+        + Add column
+      </button>
+      <div class="etd-footer-actions">
+        <button type="button" data-on:click="$_editTableDialog.close()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="primary"
+          data-on:click="@post('${base}/schema/tables/new'); $_editTableDialog.close()"
+        >
+          Create table
+        </button>
+      </div>
     </div>
   `;
 }

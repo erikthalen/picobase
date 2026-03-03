@@ -10,6 +10,7 @@ import {
   clearPendingChanges,
   deletePendingForTable,
   generateDiffSQL,
+  generateCreateTableSQL,
   getForeignKeys,
 } from "./queries.ts";
 import type { DesiredColumn } from "./queries.ts";
@@ -20,6 +21,7 @@ import { respond, sseAction } from "../../components/sse.ts";
 import {
   editTableDialogContent,
   newEmptyColRow,
+  newTableDialogContent,
 } from "./components/edit-table-dialog.ts";
 import {
   editsDialogContent,
@@ -92,19 +94,90 @@ export function createSchemaRouter(): Hono<AppEnv> {
     } catch {
       // malformed or missing body — treat as empty
     }
-    const name = (body._tableName ?? "").trim();
+    const name = (body.tablename ?? "").trim();
     if (name) {
       db.exec(
         `CREATE TABLE IF NOT EXISTS ${JSON.stringify(name)} (id INTEGER PRIMARY KEY)`,
       );
     }
-    const tables = listTables(db);
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);
     const content = erDiagramView(schema, base, pending);
-    const navHtml = nav({ basePath: base, activeSection: "schema", tables });
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
+    });
+  });
+
+  // Load new-table dialog content into the shared edit-table-dialog shell
+  app.get("/new-table-dialog", async (c) => {
+    const config = c.get("config");
+    const base = config.basePath.replace(/\/$/, "");
+    const signals = { newtablename: "", editColCount: 0 };
+    const bodyHtml = String(newTableDialogContent(base));
+    return sseAction(c, async ({ patchSignals, patchElements }) => {
+      await patchSignals(signals);
+      await patchElements(`<div id="edit-dialog-body">${bodyHtml}</div>`);
+    });
+  });
+
+  // Create a new table with column definitions
+  app.post("/tables/new", async (c) => {
+    const db = c.get("db");
+    const config = c.get("config");
+    const base = config.basePath.replace(/\/$/, "");
+    ensurePendingChangesTable(db);
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await c.req.json()) as Record<string, unknown>;
+    } catch {
+      // empty body
+    }
+    const tableName = String(body.newtablename ?? "").trim();
+    if (tableName) {
+      const count = Number(body.editColCount ?? 0);
+      const cols: DesiredColumn[] = [];
+      for (let i = 0; i < count; i++) {
+        if (body[`editcol_${i}_deleted`]) continue;
+        const name = String(body[`editcol_${i}_name`] ?? "").trim();
+        if (!name) continue;
+        cols.push({
+          name,
+          originalName: "",
+          type: String(body[`editcol_${i}_type`] ?? "TEXT"),
+          dflt_value: String(body[`editcol_${i}_default`] ?? ""),
+          notnull: Boolean(body[`editcol_${i}_notnull`]),
+          fkRef: String(body[`editcol_${i}_fkref`] ?? ""),
+        });
+      }
+      db.exec(generateCreateTableSQL(tableName, cols));
+    }
+    const schema = getFullSchema(db);
+    const pending = getPendingColumnsMap(db);
+    const content = erDiagramView(schema, base, pending);
+    return sseAction(c, async ({ patchElements }) => {
+      await patchElements(`<main id="main">${content}</main>`);
+    });
+  });
+
+  // Add a new empty column row for the new-table dialog
+  app.get("/tables/new-col-row", async (c) => {
+    const db = c.get("db");
+    const idx = Number(c.req.query("idx") ?? 0);
+    const fullSchema = getFullSchema(db);
+    const newRow = String(newEmptyColRow(idx, fullSchema));
+    const signals: Record<string, unknown> = {
+      [`editcol_${idx}_name`]: "",
+      [`editcol_${idx}_type`]: "TEXT",
+      [`editcol_${idx}_default`]: "",
+      [`editcol_${idx}_notnull`]: false,
+      [`editcol_${idx}_original`]: "",
+      [`editcol_${idx}_deleted`]: false,
+      [`editcol_${idx}_fkref`]: "",
+      editColCount: idx + 1,
+    };
+    return sseAction(c, async ({ patchSignals, patchElements }) => {
+      await patchSignals(signals);
+      await patchElements(newRow, { selector: "#edit-dialog-col-list", mode: "append" });
     });
   });
 

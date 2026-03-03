@@ -1,1 +1,0 @@
-ALTER TABLE "bra" ADD COLUMN "new_column" TEXT DEFAULT yep;

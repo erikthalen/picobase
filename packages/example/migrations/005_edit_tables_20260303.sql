@@ -1,1 +1,0 @@
-ALTER TABLE "bra" ADD COLUMN "post_id" INTEGER REFERENCES "posts" ("id");

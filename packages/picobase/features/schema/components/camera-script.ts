@@ -374,6 +374,11 @@ export function cameraScript(
         if (header) {
           var box = header.closest("[data-table]");
           if (!box) return;
+          pos[box.dataset.table] = {
+            x: parseFloat(box.style.left),
+            y: parseFloat(box.style.top),
+            h: parseFloat(box.dataset.h),
+          };
           isDragging = true;
           dragEl = box;
           dragStart = { x: e.clientX, y: e.clientY };

@@ -76,6 +76,37 @@ const diagramStyles = css`
     display: flex;
     gap: 0.5rem;
   }
+  .er-diagram-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 5rem 2rem;
+  }
+  .er-diagram-empty-icon {
+    background: var(--pb-surface);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pb-text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .er-diagram-empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .er-diagram-empty-body {
+    font-size: 0.875rem;
+    color: var(--pb-text-muted);
+    max-width: 300px;
+    margin: 0 0 0.5rem;
+    line-height: 1.5;
+  }
 `;
 
 export function schemaListView(
@@ -140,13 +171,12 @@ export function schemaListView(
     .join("\n");
 
   return String(
-    html`${tabBar()}
-      <div id="schema-content">
-        <style>
-          ${schemaStyles}
-        </style>
-        ${raw(tables)}
-      </div>`,
+    html` <div id="schema-content">
+      <style>
+        ${schemaStyles}
+      </style>
+      ${raw(tables)}
+    </div>`,
   );
 }
 
@@ -155,6 +185,72 @@ export function erDiagramView(
   basePath: string,
   pendingColumns: Map<string, DesiredColumn[]> = new Map(),
 ): string {
+  if (schema.length === 0) {
+    const base = basePath.replace(/\/$/, "");
+    return String(
+      html`<style>
+          ${diagramStyles}
+        </style>
+        <div data-signals="{_tableName: ''}" class="er-diagram">
+          <div class="er-diagram-body">
+            <div class="er-diagram-controls">
+              ${createTableDialog(base)} ${schemaActions(base, 0)}
+            </div>
+            ${editTableDialogShell()} ${editsDialogShell()}
+            <div id="diagram-viewport">
+              <div class="er-diagram-empty">
+                <div class="er-diagram-empty-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path
+                      d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"
+                    />
+                    <path d="M3 10h18" />
+                    <path d="M10 3v18" />
+                  </svg>
+                </div>
+                <h3 class="er-diagram-empty-title">No tables yet</h3>
+                <p class="er-diagram-empty-body">
+                  Create your first table to start building your schema.
+                </p>
+                <button
+                  class="primary"
+                  data-on:click="$_editTableDialog.showModal(); @get('${base}/schema/new-table-dialog')"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 5l0 14" />
+                    <path d="M5 12l14 0" />
+                  </svg>
+                  New table
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`,
+    );
+  }
+
   const BOX_W = 260;
   const ROW_H = 36;
   const BOX_HEADER_H = 32;

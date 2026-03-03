@@ -56,11 +56,76 @@ const styles = css`
     gap: 0.5rem;
   }
   .backup-status-success {
-    padding: 0.75rem;
-    background: var(--pb-badge-fk-bg);
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    color: var(--pb-badge-fk-fg);
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--pb-border);
+    border-radius: 8px;
+    margin: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .backup-status-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .backup-status-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  .backup-status-body {
+    font-size: 0.8rem;
+    color: var(--pb-text-muted);
+  }
+  .backup-status-filename {
+    font-family: monospace;
+    color: var(--pb-text);
+  }
+  .upload-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--pb-badge-pk-bg);
+    color: var(--pb-badge-pk-fg);
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+  .upload-zone {
+    border: 2px dashed var(--pb-border);
+    border-radius: 8px;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    color: var(--pb-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-inline: 1rem;
+    margin-top: 2rem;
+    user-select: none;
+    transition:
+      border-color 0.15s,
+      background-color 0.15s;
+  }
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: var(--pb-text-muted);
+    background-color: var(--pb-bg);
+  }
+  .upload-zone.uploading {
+    opacity: 0.6;
+    cursor: wait;
+    pointer-events: none;
+  }
+  .upload-zone-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--pb-text);
+  }
+  .upload-zone-subtitle {
+    font-size: 0.8rem;
   }
 `;
 
@@ -70,6 +135,26 @@ function formatBytes(b: number): string {
   return `${(b / 1024 / 1024).toFixed(2)} MB`;
 }
 
+export function backupsListRows(backups: BackupEntry[], base: string): string {
+  if (backups.length === 0) {
+    return '<tr><td colspan="5" class="text-muted">No backups yet.</td></tr>';
+  }
+  return backups
+    .map((b) => {
+      const label = b.createdAt.toLocaleString();
+      const badge =
+        b.type === "upload" ? '<span class="upload-badge">upload</span>' : "";
+      return `<tr>
+  <td class="backup-filename">${b.name}${badge}</td>
+  <td>${label}</td>
+  <td>${formatBytes(b.size)}</td>
+  <td><button data-on:click="$_restoreTarget='${b.name}'">Restore</button></td>
+  <td><button class="danger" data-on:click="@delete('${base}/backups/${encodeURIComponent(b.name)}')">Delete</button></td>
+</tr>`;
+    })
+    .join("\n");
+}
+
 export function backupsView(opts: {
   backups: BackupEntry[];
   basePath: string;
@@ -77,20 +162,7 @@ export function backupsView(opts: {
   const { backups, basePath } = opts;
   const base = basePath.replace(/\/$/, "");
 
-  const rows =
-    backups.length === 0
-      ? '<tr><td colspan="4" class="text-muted">No backups yet.</td></tr>'
-      : backups
-          .map((b) => {
-            const label = b.createdAt.toLocaleString();
-            return `<tr>
-  <td class="backup-filename">${b.name}</td>
-  <td>${label}</td>
-  <td>${formatBytes(b.size)}</td>
-  <td><button class="danger" data-on:click="$_restoreTarget='${b.name}'">Restore</button></td>
-</tr>`;
-          })
-          .join("\n");
+  const rows = backupsListRows(backups, base);
 
   return String(
     html`<div id="backups-view" data-signals="{_restoreTarget:''}">
@@ -105,6 +177,7 @@ export function backupsView(opts: {
             <th>Created</th>
             <th>Size</th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="backups-list">
@@ -118,6 +191,79 @@ export function backupsView(opts: {
       >
         Create backup
       </button>
+
+      <input
+        type="file"
+        id="upload-input"
+        accept=".db,.sqlite"
+        style="display:none"
+      />
+      <label
+        for="upload-input"
+        id="upload-zone"
+        class="upload-zone"
+        data-upload-url="${base}/backups/upload"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        <span class="upload-zone-title"
+          >Drag &amp; drop a database file here</span
+        >
+        <span class="upload-zone-subtitle"
+          >or click to select (.db, .sqlite)</span
+        >
+      </label>
+
+      <script>
+        (function () {
+          var zone = document.getElementById("upload-zone");
+          var input = document.getElementById("upload-input");
+          if (!zone || !input) return;
+          var url = zone.dataset.uploadUrl;
+          zone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            zone.classList.add("drag-over");
+          });
+          zone.addEventListener("dragleave", function () {
+            zone.classList.remove("drag-over");
+          });
+          zone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            zone.classList.remove("drag-over");
+            var file = e.dataTransfer && e.dataTransfer.files[0];
+            if (file) doUpload(file);
+          });
+          input.addEventListener("change", function () {
+            if (input.files && input.files[0]) doUpload(input.files[0]);
+          });
+          function doUpload(file) {
+            var fd = new FormData();
+            fd.append("file", file);
+            zone.classList.add("uploading");
+            fetch(url, { method: "POST", body: fd })
+              .then(function (r) {
+                if (r.ok) window.location.reload();
+              })
+              .catch(function () {})
+              .finally(function () {
+                zone.classList.remove("uploading");
+              });
+          }
+        })();
+      </script>
 
       <div data-show="$_restoreTarget !== ''" class="restore-overlay">
         <div class="restore-backdrop">

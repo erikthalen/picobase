@@ -8,12 +8,12 @@ const app = new Hono();
 app.route(
   "/",
   definePicobase({
-    database: `${ROOT}/chinook.db`,
+    database: `${ROOT}/data.db`,
     migrationsDir: `${ROOT}/migrations`,
     backupsDir: `${ROOT}/backups`,
   }),
 );
 
 serve({ fetch: app.fetch, port: 3002 }, () => {
-	console.log("Picobase dev server: http://localhost:3002");
+  console.log("Picobase dev server: http://localhost:3002");
 });

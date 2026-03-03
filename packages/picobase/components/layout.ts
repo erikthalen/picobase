@@ -114,6 +114,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               border-right: 1px solid var(--pb-border);
               background: var(--pb-surface);
 
+              height: 100%;
               overflow: visible;
 
               @media (width > 600px) {
@@ -315,6 +316,9 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               border: 1px solid var(--pb-border-input);
               border-radius: 8px;
               background: transparent;
+              display: flex;
+              align-items: center;
+              gap: 0.25em;
               color: #fafafa;
               font-size: 0.8125rem;
               font-family: inherit;
@@ -540,8 +544,7 @@ export function nav({ basePath, activeSection }: NavProps): string {
     </a>`;
   };
 
-  return html` <h1
-    >
+  return html` <h1>
       <svg
         height="16"
         viewBox="0 0 170 170"
