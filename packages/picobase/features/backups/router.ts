@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { layout, nav } from "../../components/layout.ts";
+import { layout, nav, toastHtml } from "../../components/layout.ts";
 import { respond, sseAction } from "../../components/sse.ts";
 import { listTables } from "../../db/schema-queries.ts";
 import type { AppEnv } from "../../index.ts";
@@ -11,27 +11,6 @@ import {
   saveUploadedDb,
 } from "./queries.ts";
 import { backupsListRows, backupsView } from "./views.ts";
-import { html } from "hono/html";
-
-const CHECK_ICON = html`<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="16"
-  height="16"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  stroke-width="2"
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  class="icon icon-tabler icons-tabler-outline icon-tabler-check"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M5 12l5 5l10 -10" />
-</svg>`;
-
-function statusHtml(title: string, body: string): string {
-  return `<div id="backup-status" class="backup-status-success"><span class="backup-status-icon">${CHECK_ICON}</span><div><div class="backup-status-title">${title}</div><div class="backup-status-body">${body}</div></div></div>`;
-}
 
 export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -61,10 +40,8 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
         `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
       );
       await patchElements(
-        statusHtml(
-          "Backup created",
-          `Saved as <span class="backup-status-filename">${backupName}</span>.`,
-        ),
+        toastHtml("Backup created", `Saved as <code>${backupName}</code>.`),
+        { selector: "#toast-container", mode: "append" },
       );
     });
   });
@@ -98,7 +75,15 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
     }
     const backups = listBackups(config.backupsDir);
     return sseAction(c, async ({ patchElements }) => {
-      await patchElements(`<tbody id="backups-list">${backupsListRows(backups, base)}</tbody>`);
+      if (backups.length === 0) {
+        await patchElements(
+          `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
+        );
+      } else {
+        await patchElements(
+          `<tbody id="backups-list">${backupsListRows(backups)}</tbody>`,
+        );
+      }
     });
   });
 
@@ -123,13 +108,16 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
     reconnectDb();
     const backups = listBackups(config.backupsDir);
     const body = safetyName
-      ? `Restored from <span class="backup-status-filename">${name}</span>. A safety backup was saved as <span class="backup-status-filename">${safetyName}</span>.`
-      : `Restored from <span class="backup-status-filename">${name}</span>.`;
+      ? `Restored from:<br><code>${name}</code>.<br><br>A safety backup was saved as:<br><code>${safetyName}</code>.`
+      : `Restored from:<br><code>${name}</code>.`;
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(
         `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
       );
-      await patchElements(statusHtml("Database restored", body));
+      await patchElements(toastHtml("Database restored", body), {
+        selector: "#toast-container",
+        mode: "append",
+      });
     });
   });
 

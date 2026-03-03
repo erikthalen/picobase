@@ -438,6 +438,7 @@ export function cameraScript(
       // ── Zoom buttons ──────────────────────────────────────────
       var btnIn = document.getElementById("zoom-in");
       var btnOut = document.getElementById("zoom-out");
+      var btnReset = document.getElementById("reset-view");
       function zoomStep(dir) {
         var rect = container.getBoundingClientRect();
         var i = Math.round(camera.z * 100) / 25;
@@ -451,6 +452,16 @@ export function cameraScript(
       if (btnOut)
         btnOut.addEventListener("click", function () {
           zoomStep(-1);
+        });
+      if (btnReset)
+        btnReset.addEventListener("click", function () {
+          camera = { x: 0, y: 0, z: 1 };
+          wrap.style.transition = "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+          applyCamera();
+          wrap.addEventListener("transitionend", function onDone() {
+            wrap.style.transition = "";
+            wrap.removeEventListener("transitionend", onDone);
+          });
         });
 
       // ── Dash animation ────────────────────────────────────────

@@ -20,10 +20,16 @@ export function createTableDialog(base: string) {
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-table-plus"
       >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M12 5l0 14" />
-        <path d="M5 12l14 0" />
+        <path
+          d="M12.5 21h-7.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v7.5"
+        />
+        <path d="M3 10h18" />
+        <path d="M10 3v18" />
+        <path d="M16 19h6" />
+        <path d="M19 16v6" />
       </svg>
       New Table
     </button>
@@ -35,9 +41,6 @@ const css = String.raw;
 const styles = css`
   .create-table-button {
     background: var(--pb-bg);
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
   }
 
   .create-table-dialog {

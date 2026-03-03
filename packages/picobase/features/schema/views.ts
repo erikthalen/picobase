@@ -93,23 +93,59 @@ const diagramStyles = css`
     display: flex;
     gap: 0.5rem;
   }
+  .ctrl-tooltip {
+    position: relative;
+  }
+  .ctrl-tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .ctrl-tooltip::after {
+    content: '';
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .ctrl-tooltip:hover::before,
+  .ctrl-tooltip:hover::after {
+    opacity: 1;
+  }
   .er-diagram-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     text-align: center;
-    padding: 5rem 2rem;
+    padding: 5rem 2rem 25vh;
+    height: 100%;
   }
   .er-diagram-empty-icon {
-    background: var(--pb-surface);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--pb-text-muted);
+    color: var(--pb-text-faint);
     margin-bottom: 0.5rem;
   }
   .er-diagram-empty-title {
@@ -211,7 +247,6 @@ export function erDiagramView(
         <div data-signals="{_tableName: ''}" class="er-diagram">
           <div class="er-diagram-body">
             <div class="er-diagram-controls">
-              <div class="ctrl-group">${createTableDialog(base)}</div>
               ${schemaActions(base, 0)}
             </div>
             ${editTableDialogShell()} ${editsDialogShell()}
@@ -228,13 +263,15 @@ export function erDiagramView(
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-table-off"
                   >
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path
-                      d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"
+                      d="M7 3h12a2 2 0 0 1 2 2v12m-.585 3.413a1.994 1.994 0 0 1 -1.415 .587h-14a2 2 0 0 1 -2 -2v-14c0 -.55 .223 -1.05 .583 -1.412"
                     />
-                    <path d="M3 10h18" />
-                    <path d="M10 3v18" />
+                    <path d="M3 10h7m4 0h7" />
+                    <path d="M10 3v3m0 4v11" />
+                    <path d="M3 3l18 18" />
                   </svg>
                 </div>
                 <h3 class="er-diagram-empty-title">No tables yet</h3>
@@ -323,6 +360,32 @@ export function erDiagramView(
             <div class="ctrl-group">${createTableDialog(base)}</div>
             <div class="ctrl-group">${zoomControls()}</div>
             ${schemaActions(base, pendingCount)}
+            <div class="ctrl-group">
+              <button
+                id="reset-view"
+                class="zoom-btn ctrl-tooltip"
+                data-tooltip="Reset view"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                  <path d="M12 2l0 4" />
+                  <path d="M12 18l0 4" />
+                  <path d="M2 12l4 0" />
+                  <path d="M18 12l4 0" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           ${editTableDialogShell()} ${editsDialogShell()}

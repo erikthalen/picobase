@@ -7,8 +7,8 @@ const styles = css`
     display: contents;
   }
   .zoom-btn {
-    width: 28px;
-    height: 28px;
+    width: 25px;
+    height: 25px;
     padding: 0;
     display: flex;
     align-items: center;

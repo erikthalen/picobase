@@ -43,6 +43,14 @@ export function runMigration(
 	);
 }
 
+export function getMigrationSql(dir: string, filename: string): string {
+	try {
+		return readFileSync(join(dir, filename), "utf8");
+	} catch {
+		return "";
+	}
+}
+
 export function saveMigration(
 	dir: string,
 	filename: string,

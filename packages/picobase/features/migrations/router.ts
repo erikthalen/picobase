@@ -7,10 +7,12 @@ import {
 	ensureMigrationsTable,
 	getApplied,
 	getFileMigrations,
+	getMigrationSql,
 	runMigration,
 	saveMigration,
 } from "./queries.ts";
 import { migrationsView } from "./views.ts";
+import { highlightSql } from "./sql-highlight.ts";
 
 export function createMigrationsRouter(): Hono<AppEnv> {
 	const app = new Hono<AppEnv>();
@@ -109,6 +111,19 @@ export function createMigrationsRouter(): Hono<AppEnv> {
 		return sseAction(c, async ({ patchElements }) => {
 			await patchElements(
 				`<main id="main">${migrationsView({ files, applied, basePath: base })}</main>`,
+			);
+		});
+	});
+
+	// View SQL content of a migration file
+	app.get("/:name", async (c) => {
+		const config = c.get("config");
+		const name = decodeURIComponent(c.req.param("name"));
+		const sql = getMigrationSql(config.migrationsDir, name);
+		const highlighted = highlightSql(sql);
+		return sseAction(c, async ({ patchElements }) => {
+			await patchElements(
+				`<div id="migration-sql-content"><pre class="migration-sql-pre">${highlighted}</pre></div>`,
 			);
 		});
 	});

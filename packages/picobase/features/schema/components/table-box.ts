@@ -244,9 +244,9 @@ export function tableBox(
         <a
           href="${base}/tables/${t.name}"
           data-tooltip="Browse table"
-          data-on:click="@get('${base}/tables/${t.name}')"
           class="table-box-link-btn"
-        >
+          >
+          <!-- data-on:click="@get('${base}/tables/${t.name}')" -->
           <svg
             width="12"
             height="12"

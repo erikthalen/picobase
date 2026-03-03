@@ -85,6 +85,12 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               --pb-diagram-title: #dcdcdc;
               --pb-diagram-relation: #535353;
               --pb-diagram-row-alt: #1b1b1b;
+
+              --pb-syntax-bg: #1a1a1f;
+              --pb-syntax-keyword: #4ec9b0;
+              --pb-syntax-string: #9cdcfe;
+              --pb-syntax-comment: #6a9955;
+              --pb-syntax-number: #b5cea8;
             }
             *,
             *::before,
@@ -92,6 +98,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               box-sizing: border-box;
               margin: 0;
               padding: 0;
+              text-rendering: geometricPrecision;
             }
             html {
               font-size: 14px;
@@ -301,7 +308,8 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               background: transparent;
               display: flex;
               align-items: center;
-              gap: 0.25em;
+              justify-content: center;
+              gap: 0.5em;
               color: #fafafa;
               font-size: 0.8125rem;
               font-family: inherit;
@@ -493,11 +501,73 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               letter-spacing: 0.1em;
               user-select: none;
             }
+            #toast-container {
+              position: fixed;
+              top: 1rem;
+              right: 1rem;
+              z-index: 200;
+              display: flex;
+              flex-direction: column;
+              gap: 0.5rem;
+              pointer-events: none;
+            }
+            @keyframes toast-in {
+              from {
+                opacity: 0;
+                transform: translateY(-0.75rem);
+              }
+              to {
+                opacity: 1;
+                transform: translateX(0);
+              }
+            }
+            .toast {
+              background: var(--pb-surface);
+              border: 1px solid var(--pb-border);
+              border-radius: 8px;
+              padding: 0.875rem 1rem;
+              display: flex;
+              align-items: flex-start;
+              gap: 0.75rem;
+              max-width: 320px;
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+              pointer-events: all;
+              animation: toast-in 0.2s ease;
+            }
+            .toast-content {
+              flex: 1;
+              min-width: 0;
+            }
+            .toast-title {
+              font-size: 0.875rem;
+              font-weight: 600;
+              margin-bottom: 0.2rem;
+            }
+            .toast-body {
+              font-size: 0.8rem;
+              color: var(--pb-text-muted);
+              line-height: 1.4;
+            }
+            .toast-dismiss {
+              flex-shrink: 0;
+              height: 20px;
+              width: 20px;
+              min-width: 20px;
+              padding: 0;
+              border-color: transparent;
+              color: var(--pb-text-faint);
+              margin-top: 1px;
+            }
+            .toast-dismiss:hover {
+              border-color: transparent;
+              color: var(--pb-text-muted);
+            }
           </style>
         </head>
         <body>
           ${raw(navHtml)}
           <main id="main">${raw(content)}</main>
+          <div id="toast-container"></div>
         </body>
       </html>`,
   );
@@ -515,6 +585,7 @@ export function nav({ basePath, activeSection }: NavProps): string {
   const link = (path: string, label: string, section: string, icon: string) =>
     html`<a
       href="${base}${path}"
+      data-on:click="@get('${base}${path}')"
       ${activeSection === section ? " class=active" : ""}
     >
       ${raw(icon)} ${label}
@@ -523,19 +594,19 @@ export function nav({ basePath, activeSection }: NavProps): string {
   return String(html`
     <div class="site-logo">
       <svg
-        height="16"
+        height="12"
         viewBox="0 0 170 170"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M85 0C108.839 1.04202e-06 130.385 9.81362 145.82 25.6211C146.295 26.1077 146.765 26.5998 147.229 27.0977C161.126 42.0264 169.715 61.9624 169.993 83.9014C169.998 84.267 170 84.6332 170 85C170 131.944 131.944 170 85 170H0V85C2.052e-06 38.0558 38.0558 -2.052e-06 85 0Z"
+          d="M85 0C108.839 1.04202e-06 130.385 9.81362 145.82 25.6211C146.295 26.1077 146.765 26.5998 147.229 27.0977C141.126 42.0264 169.715 61.9624 169.993 83.9014C169.998 84.267 170 84.6332 170 85C170 131.944 131.944 170 85 170H0V85C2.052e-06 38.0558 38.0558 -2.052e-06 85 0Z"
           fill="currentColor"
         />
       </svg>
 
       <svg
-        height="16"
+        height="14"
         viewBox="0 0 2262 490"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -627,4 +698,19 @@ export function nav({ basePath, activeSection }: NavProps): string {
       )}
     </nav>
   `);
+}
+
+export function toastHtml(title: string, body: string): string {
+  return `<div class="toast" role="alert">
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-body">${body}</div>
+    </div>
+    <button class="toast-dismiss" onclick="this.closest('.toast').remove()" aria-label="Dismiss">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6l-12 12" />
+        <path d="M6 6l12 12" />
+      </svg>
+    </button>
+  </div>`;
 }

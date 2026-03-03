@@ -6,16 +6,95 @@ const css = String.raw;
 const styles = css`
   #migrations-view {
   }
-  .migrations-table {
-    margin-bottom: 1.5rem;
+  .migrations-container {
+    padding: 4.5rem 1.5rem 6rem;
+    max-width: 780px;
+    margin-inline: auto;
+  }
+  .migrations-card {
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .migrations-controls {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .migrations-controls .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 10px;
+    padding: 3px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .migrations-controls .ctrl-group button {
+    border: none;
+    border-radius: 7px;
+  }
+  .migrations-controls .ctrl-group button:hover {
+    border-color: transparent;
   }
   .migration-filename {
     font-family: monospace;
     font-size: 0.8rem;
   }
-  .migrations-controls {
-    margin: 1rem;
+  #migration-sql-dialog {
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 640px;
+    color: inherit;
   }
+  #migration-sql-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .migration-sql-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
+  .migration-sql-dialog-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: monospace;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .migration-sql-pre {
+    margin: 0;
+    font-family: var(--pb-monospace);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+    color: #fafafa;
+    background: var(--pb-syntax-bg);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+  .sql-keyword { color: var(--pb-syntax-keyword); }
+  .sql-string  { color: var(--pb-syntax-string); }
+  .sql-comment { color: var(--pb-syntax-comment); font-style: italic; }
+  .sql-number  { color: var(--pb-syntax-number); }
   #migration-editor {
     background: var(--pb-surface);
     border: 1px solid var(--pb-border);
@@ -55,19 +134,16 @@ const styles = css`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 5rem 2rem;
+    padding: 5rem 2rem 25vh;
     text-align: center;
     gap: 0.75rem;
+    height: 100vh;
   }
   .migrations-empty-icon {
-    background: var(--pb-bg);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--pb-text-muted);
+    color: var(--pb-text-faint);
     margin-bottom: 0.5rem;
   }
   .migrations-empty-title {
@@ -132,13 +208,26 @@ export function migrationsView(opts: {
     </dialog>
   `;
 
+  const sqlDialog = html`
+    <dialog id="migration-sql-dialog" closedby="any">
+      <div class="migration-sql-dialog-header">
+        <h3 class="migration-sql-dialog-title" id="migration-sql-dialog-title">
+        </h3>
+        <form method="dialog">
+          <button type="submit">Close</button>
+        </form>
+      </div>
+      <div id="migration-sql-content"></div>
+    </dialog>
+  `;
+
   if (files.length === 0) {
     return String(html`
       <div id="migrations-view">
         <style>
           ${styles}
         </style>
-        ${dialog}
+        ${dialog} ${sqlDialog}
         <div class="migrations-empty">
           <div class="migrations-empty-icon">
             <svg
@@ -203,7 +292,8 @@ export function migrationsView(opts: {
       const runBtn = !isApplied
         ? `<button class="primary" data-on:click="@post('${base}/migrations/${encodeURIComponent(f.name)}/run')">Run</button>`
         : "";
-      return `<tr><td class="migration-filename">${f.name}</td><td>${statusBadge}</td><td>${runBtn}</td></tr>`;
+      const viewBtn = `<button data-on:click="document.getElementById('migration-sql-dialog-title').textContent='${f.name.replace(/'/g, "\\'")}'; document.getElementById('migration-sql-dialog').showModal(); @get('${base}/migrations/${encodeURIComponent(f.name)}')">View</button>`;
+      return `<tr><td class="migration-filename">${f.name}</td><td>${statusBadge}</td><td style="display:flex;gap:4px;justify-content:flex-end">${viewBtn}${runBtn}</td></tr>`;
     })
     .join("\n");
 
@@ -212,33 +302,36 @@ export function migrationsView(opts: {
       <style>
         ${styles}
       </style>
-
-      <table class="migrations-table">
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="migrations-list">
-          ${raw(rows)}
-        </tbody>
-      </table>
-
+      ${dialog} ${sqlDialog}
       <div class="migrations-controls">
         ${raw(
           hasPending
-            ? `<button class="primary" data-on:click="@post('${base}/migrations/run-all')">Run all pending</button>`
+            ? `<div class="ctrl-group"><button class="primary" data-on:click="@post('${base}/migrations/run-all')">Run all pending</button></div>`
             : "",
         )}
-        ${dialog}
-        <button
-          class="new-migration-btn"
-          data-on:click="document.getElementById('migration-editor').showModal()"
-        >
-          + New migration
-        </button>
+        <div class="ctrl-group">
+          <button
+            data-on:click="document.getElementById('migration-editor').showModal()"
+          >
+            New migration
+          </button>
+        </div>
+      </div>
+      <div class="migrations-container">
+        <div class="migrations-card">
+          <table>
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="migrations-list">
+              ${raw(rows)}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `);
