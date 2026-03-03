@@ -1,7 +1,7 @@
-import type { DatabaseSync } from 'node:sqlite'
-import { listTables } from '../../db/schema-queries.ts'
-import { getColumns } from '../tables/queries.ts'
-import type { Column } from '../tables/queries.ts'
+import type { DatabaseSync } from "node:sqlite";
+import { listTables } from "../../db/schema-queries.ts";
+import type { Column } from "../tables/queries.ts";
+import { getColumns } from "../tables/queries.ts";
 
 // ── Pending changes ────────────────────────────────────────────────────────
 
@@ -163,15 +163,15 @@ export function generateDiffSQL(
 }
 
 export interface TableSchema {
-  name: string
-  columns: Column[]
-  foreignKeys: ForeignKey[]
+	name: string;
+	columns: Column[];
+	foreignKeys: ForeignKey[];
 }
 
 export interface ForeignKey {
-  from: string
-  table: string
-  to: string
+	from: string;
+	table: string;
+	to: string;
 }
 
 export function getForeignKeys(db: DatabaseSync, table: string): ForeignKey[] {
@@ -182,10 +182,10 @@ export function getForeignKeys(db: DatabaseSync, table: string): ForeignKey[] {
 }
 
 export function getFullSchema(db: DatabaseSync): TableSchema[] {
-  const tables = listTables(db)
-  return tables.map((name) => ({
-    name,
-    columns: getColumns(db, name),
-    foreignKeys: getForeignKeys(db, name),
-  }))
+	const tables = listTables(db);
+	return tables.map((name) => ({
+		name,
+		columns: getColumns(db, name),
+		foreignKeys: getForeignKeys(db, name),
+	}));
 }

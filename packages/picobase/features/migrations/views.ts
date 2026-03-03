@@ -2,33 +2,33 @@ import { html, raw } from "hono/html";
 import type { MigrationFile } from "./queries.ts";
 
 export function migrationsView(opts: {
-  files: MigrationFile[];
-  applied: string[];
-  basePath: string;
+	files: MigrationFile[];
+	applied: string[];
+	basePath: string;
 }): string {
-  const { files, applied, basePath } = opts;
-  const base = basePath.replace(/\/$/, "");
-  const appliedSet = new Set(applied);
+	const { files, applied, basePath } = opts;
+	const base = basePath.replace(/\/$/, "");
+	const appliedSet = new Set(applied);
 
-  const rows =
-    files.length === 0
-      ? '<tr><td colspan="3" class="text-muted">No migration files found.</td></tr>'
-      : files
-          .map((f) => {
-            const isApplied = appliedSet.has(f.name);
-            const statusBadge = isApplied
-              ? '<span class="badge fk">Applied</span>'
-              : '<span class="badge pk">Pending</span>';
-            const runBtn = !isApplied
-              ? `<button class="primary" data-on:click="@post('${base}/migrations/${encodeURIComponent(f.name)}/run')">Run</button>`
-              : "";
-            return `<tr><td style="font-family:monospace;font-size:0.8rem">${f.name}</td><td>${statusBadge}</td><td>${runBtn}</td></tr>`;
-          })
-          .join("\n");
+	const rows =
+		files.length === 0
+			? '<tr><td colspan="3" class="text-muted">No migration files found.</td></tr>'
+			: files
+					.map((f) => {
+						const isApplied = appliedSet.has(f.name);
+						const statusBadge = isApplied
+							? '<span class="badge fk">Applied</span>'
+							: '<span class="badge pk">Pending</span>';
+						const runBtn = !isApplied
+							? `<button class="primary" data-on:click="@post('${base}/migrations/${encodeURIComponent(f.name)}/run')">Run</button>`
+							: "";
+						return `<tr><td style="font-family:monospace;font-size:0.8rem">${f.name}</td><td>${statusBadge}</td><td>${runBtn}</td></tr>`;
+					})
+					.join("\n");
 
-  const hasPending = files.some((f) => !appliedSet.has(f.name));
+	const hasPending = files.some((f) => !appliedSet.has(f.name));
 
-  return String(html`
+	return String(html`
     <table style="margin-bottom:1.5rem">
       <thead>
         <tr>
@@ -44,10 +44,10 @@ export function migrationsView(opts: {
 
     <div style="margin: 1rem;" data-signals="{_showEditor:false}">
       ${raw(
-        hasPending
-          ? `<button class="primary" data-on:click="@post('${base}/migrations/run-all')">Run all pending</button>`
-          : "",
-      )}
+				hasPending
+					? `<button class="primary" data-on:click="@post('${base}/migrations/run-all')">Run all pending</button>`
+					: "",
+			)}
 
       <dialog
         id="migration_editor"

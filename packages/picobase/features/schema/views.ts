@@ -66,13 +66,13 @@ export function schemaListView(
           </tbody>
         </table>
       </div>`;
-    })
-    .join("\n");
+		})
+		.join("\n");
 
   return String(
     html`${tabBar()}
       <div id="schema-content">${raw(tables)}</div>`,
-  );
+	);
 }
 
 export function erDiagramView(
@@ -88,12 +88,12 @@ export function erDiagramView(
   const COLS = Math.max(1, Math.ceil(Math.sqrt(schema.length)));
   const PAD = 60;
 
-  const boxes = schema.map((t, i) => {
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    const h = BOX_HEADER_H + t.columns.length * ROW_H;
-    return { t, col, row, h };
-  });
+	const boxes = schema.map((t, i) => {
+		const col = i % COLS;
+		const row = Math.floor(i / COLS);
+		const h = BOX_HEADER_H + t.columns.length * ROW_H;
+		return { t, col, row, h };
+	});
 
   const rowYOffsets: number[] = [];
   const numRows = Math.ceil(schema.length / COLS);
@@ -106,14 +106,14 @@ export function erDiagramView(
     canvasContentH += maxH + ROW_GAP;
   }
 
-  const positions: Record<string, { x: number; y: number; h: number }> = {};
-  boxes.forEach(({ t, col, row, h }) => {
-    positions[t.name] = {
-      x: PAD / 2 + col * (BOX_W + COL_GAP),
-      y: rowYOffsets[row] ?? PAD,
-      h,
-    };
-  });
+	const positions: Record<string, { x: number; y: number; h: number }> = {};
+	boxes.forEach(({ t, col, row, h }) => {
+		positions[t.name] = {
+			x: PAD / 2 + col * (BOX_W + COL_GAP),
+			y: rowYOffsets[row] ?? PAD,
+			h,
+		};
+	});
 
   const canvasW = Math.max(
     2000,
@@ -185,5 +185,5 @@ export function erDiagramView(
           ${cameraScript(BOX_W, BOX_HEADER_H, ROW_H)}
         </div>
       </div>`,
-  );
+	);
 }

@@ -1,12 +1,12 @@
-import { DatabaseSync } from 'node:sqlite'
-import { unlinkSync, existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, unlinkSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 
-const path = './example/dev.db'
+const path = "./example/dev.db";
 
-mkdirSync('./example', { recursive: true })
-if (existsSync(path)) unlinkSync(path)
+mkdirSync("./example", { recursive: true });
+if (existsSync(path)) unlinkSync(path);
 
-const db = new DatabaseSync(path)
+const db = new DatabaseSync(path);
 
 db.exec(`
   CREATE TABLE users (
@@ -33,7 +33,7 @@ db.exec(`
     (1, 'Hello world', 'First post body', 1),
     (1, 'Draft post', 'Unpublished', 0),
     (2, 'Bob writes', 'Content here', 1);
-`)
+`);
 
-db.close()
-console.log('Seeded example/dev.db with users and posts tables')
+db.close();
+console.log("Seeded example/dev.db with users and posts tables");

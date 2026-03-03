@@ -33,17 +33,23 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
           <link
-            href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
             rel="stylesheet"
           />
+
+          <link
+            href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&display=swap"
+            rel="stylesheet"
+          />
+
           <script
             type="module"
             src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.7/bundles/datastar.js"
           ></script>
           <style>
             :root {
-              --pb-sans-serif: "Inter", system-ui, sans-serif;
-              --pb-monospace: "JetBrains Mono", monospace;
+              --pb-sans-serif: "Be Vietnam Pro", system-ui, sans-serif;
+              --pb-monospace: "Atkinson Hyperlegible Mono", monospace;
 
               --pb-bg: #09090b;
               --pb-surface: #111113;
@@ -87,13 +93,19 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               margin: 0;
               padding: 0;
             }
+            html {
+              font-size: 14px;
+              text-rendering: geometricPrecision;
+            }
             body {
               font-family: var(--pb-sans-serif);
               display: flex;
               min-height: 100vh;
               background: var(--pb-bg);
               color: #fafafa;
+              user-select: none;
             }
+
             aside {
               flex-shrink: 0;
               display: flex;
@@ -170,6 +182,9 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               overflow: auto;
               background: var(--pb-bg);
               max-height: 100vh;
+
+              display: flex;
+              flex-direction: column;
             }
             h2 {
               font-size: 1.125rem;
@@ -295,7 +310,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               cursor: pointer;
               padding: 0.375rem 0.75rem;
               border: 1px solid var(--pb-border-input);
-              border-radius: 6px;
+              border-radius: 8px;
               background: transparent;
               color: #fafafa;
               font-size: 0.8125rem;
@@ -384,6 +399,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               overflow-x: auto;
               border-bottom: 1px solid var(--pb-border);
               scrollbar-width: none;
+              flex-shrink: 0;
 
               position: sticky;
               top: 0;
@@ -490,7 +506,9 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
           </style>
         </head>
         <body>
-          <aside>${raw(navHtml)}</aside>
+          <div class="sidebar">
+            <aside>${raw(navHtml)}</aside>
+          </div>
           <main id="main">${raw(content)}</main>
         </body>
       </html>`,
@@ -503,11 +521,7 @@ interface NavProps {
   tables?: string[];
 }
 
-export function nav({
-  basePath,
-  activeSection,
-  tables = [],
-}: NavProps): string {
+export function nav({ basePath, activeSection }: NavProps): string {
   const base = basePath.replace(/\/$/, "");
   const link = (
     path: string,

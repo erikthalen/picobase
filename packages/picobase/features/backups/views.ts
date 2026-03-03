@@ -2,35 +2,35 @@ import { html, raw } from "hono/html";
 import type { BackupEntry } from "./queries.ts";
 
 function formatBytes(b: number): string {
-  if (b < 1024) return `${b} B`;
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-  return `${(b / 1024 / 1024).toFixed(2)} MB`;
+	if (b < 1024) return `${b} B`;
+	if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+	return `${(b / 1024 / 1024).toFixed(2)} MB`;
 }
 
 export function backupsView(opts: {
-  backups: BackupEntry[];
-  basePath: string;
+	backups: BackupEntry[];
+	basePath: string;
 }): string {
-  const { backups, basePath } = opts;
-  const base = basePath.replace(/\/$/, "");
+	const { backups, basePath } = opts;
+	const base = basePath.replace(/\/$/, "");
 
-  const rows =
-    backups.length === 0
-      ? '<tr><td colspan="4" class="text-muted">No backups yet.</td></tr>'
-      : backups
-          .map((b) => {
-            const label = b.createdAt.toLocaleString();
-            return `<tr>
+	const rows =
+		backups.length === 0
+			? '<tr><td colspan="4" class="text-muted">No backups yet.</td></tr>'
+			: backups
+					.map((b) => {
+						const label = b.createdAt.toLocaleString();
+						return `<tr>
   <td style="font-family:monospace;font-size:0.8rem">${b.name}</td>
   <td>${label}</td>
   <td>${formatBytes(b.size)}</td>
   <td><button class="danger" data-on:click="$_restoreTarget='${b.name}'">Restore</button></td>
 </tr>`;
-          })
-          .join("\n");
+					})
+					.join("\n");
 
-  return String(
-    html`<div data-signals="{_restoreTarget:''}">
+	return String(
+		html`<div data-signals="{_restoreTarget:''}">
       <div id="backup-status"></div>
       <table style="margin-bottom:1.5rem">
         <thead>
@@ -95,5 +95,5 @@ export function backupsView(opts: {
         </div>
       </div>
     </div>`,
-  );
+	);
 }
