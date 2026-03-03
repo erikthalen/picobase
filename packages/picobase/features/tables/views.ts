@@ -42,9 +42,162 @@ const rowsStyles = css`
   .rows-wrapper {
     display: contents;
   }
+  #table-tabs-bar {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #table-tabs-bar .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 10px;
+    padding: 3px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+  }
+  #table-tabs-bar .ctrl-group a {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 7px;
+    color: var(--pb-text-muted);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+  }
+  #table-tabs-bar .ctrl-group a:hover {
+    background: var(--pb-nav-hover);
+    color: var(--pb-text-heading);
+    border-color: transparent;
+  }
+  .table-tabs-wrap {
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    padding: 3px;
+    max-width: calc(100vw - 24rem);
+  }
+  .table-tabs-wrap::before,
+  .table-tabs-wrap::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    width: 2.5rem;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .table-tabs-wrap::before {
+    left: 3px;
+    border-radius: 7px 0 0 7px;
+    background: linear-gradient(to right, var(--pb-surface), transparent);
+  }
+  .table-tabs-wrap::after {
+    right: 3px;
+    border-radius: 0 7px 7px 0;
+    background: linear-gradient(to left, var(--pb-surface), transparent);
+  }
+  .table-tabs-wrap.fade-left::before { opacity: 1; }
+  .table-tabs-wrap.fade-right::after { opacity: 1; }
+  #table-tabs {
+    position: static;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+  #table-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  #table-tabs a {
+    padding: 0.4rem 0.875rem;
+    height: 28px;
+    border-radius: 7px;
+    color: var(--pb-text-muted);
+  }
+  #table-tabs a:hover {
+    background: var(--pb-nav-hover);
+    color: var(--pb-text-heading);
+  }
+  #table-tabs a.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fafafa;
+  }
+  .ctrl-tooltip {
+    position: relative;
+  }
+  .ctrl-tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .ctrl-tooltip::after {
+    content: '';
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .ctrl-tooltip:hover::before,
+  .ctrl-tooltip:hover::after {
+    opacity: 1;
+  }
+  .rows-container {
+    padding: 4.5rem 1.5rem 6rem;
+    max-width: 1200px;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .rows-card {
+    background: var(--pb-surface);
+    border: 1px solid var(--pb-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
   .row-count {
-    margin: 0.5rem;
+    padding: 0.625rem 0.875rem;
     font-size: 0.8rem;
+    color: var(--pb-text-muted);
+    border-top: 1px solid var(--pb-border);
   }
   .pk-cell {
     font-size: 0.8rem;
@@ -57,7 +210,7 @@ export function tableListView(tables: string[], basePath: string): string {
     return String(
       html`<div id="tables-view">
         <style>
-          ${emptyStateStyles}
+          ${raw(emptyStateStyles)}
         </style>
         <div class="tables-empty">
           <div class="tables-empty-icon">
@@ -116,9 +269,46 @@ export function tableListView(tables: string[], basePath: string): string {
   );
 }
 
-export function rowsView(opts: {
+export function buildTabBar(
+  tables: string[],
+  table: string,
+  basePath: string,
+): string {
+  if (tables.length === 0) return "";
+  const base = basePath.replace(/\/$/, "");
+  const links = tables
+    .map(
+      (t) =>
+        `<a href="${base}/tables/${t}" data-on:click__prevent="@get('${base}/tables/${t}')"${t === table ? ' class="active"' : ""}>${t}</a>`,
+    )
+    .join("");
+  return `<div id="table-tabs-bar">
+  <div class="ctrl-group">
+    <a href="${base}/schema" data-on:click="@get('${base}/schema')" class="ctrl-tooltip" data-tooltip="Schema" aria-label="Schema">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>
+    </a>
+  </div>
+  <div id="table-tabs-wrap" class="table-tabs-wrap"><nav id="table-tabs" class="tab-bar">${links}</nav></div>
+</div>
+<script>
+(function () {
+  var nav = document.getElementById('table-tabs');
+  var wrap = nav && nav.parentElement;
+  if (!nav || !wrap) return;
+  function update() {
+    var sl = nav.scrollLeft;
+    var max = nav.scrollWidth - nav.clientWidth;
+    wrap.classList.toggle('fade-left', sl > 2);
+    wrap.classList.toggle('fade-right', max > 2 && sl < max - 2);
+  }
+  nav.addEventListener('scroll', update);
+  update();
+})();
+</script>`;
+}
+
+export function buildRowsContainer(opts: {
   table: string;
-  tables: string[];
   columns: Column[];
   rows: Record<string, unknown>[];
   page: number;
@@ -126,7 +316,7 @@ export function rowsView(opts: {
   limit: number;
   basePath: string;
 }): string {
-  const { table, tables, columns, rows, page, total, limit, basePath } = opts;
+  const { table, columns, rows, page, total, limit, basePath } = opts;
   const totalPages = Math.ceil(total / limit);
   const pkCol = columns.find((c) => c.pk);
 
@@ -141,18 +331,12 @@ export function rowsView(opts: {
     .map((row) => {
       const rowid = pkCol ? row[pkCol.name] : null;
       const cells = columns
-        .map((c) => {
-          const val = String(row[c.name] ?? "");
-          return `<td>${val}</td>`;
-        })
+        .map((c) => `<td>${String(row[c.name] ?? "")}</td>`)
         .join("");
-      return `<tr id="row-${rowid}">${cells}<td>
-  <button class="danger" data-on:click="@delete('${basePath}/tables/${table}/${rowid}')">Delete</button>
-</td></tr>`;
+      return `<tr id="row-${rowid}">${cells}<td><button class="danger" data-on:click="@delete('${basePath}/tables/${table}/${rowid}')">Delete</button></td></tr>`;
     })
     .join("\n");
 
-  // Build page number list with ellipsis gaps
   const pageNums = [
     ...new Set(
       [1, totalPages, page - 1, page, page + 1].filter(
@@ -181,40 +365,44 @@ export function rowsView(opts: {
     totalPages > 1
       ? `<nav class="pagination">
           ${page > 1 ? `<button class="pagination-btn" data-on:click="${pageUrl(page - 1)}">&#8249; Previous</button>` : `<button class="pagination-btn" disabled>&#8249; Previous</button>`}
-          <span class="pagination-buttons">
-          ${pageButtons}
-          </span>
+          <span class="pagination-buttons">${pageButtons}</span>
           ${page < totalPages ? `<button class="pagination-btn" data-on:click="${pageUrl(page + 1)}">Next &#8250;</button>` : `<button class="pagination-btn" disabled>Next &#8250;</button>`}
         </nav>`
-      : `<p class="text-muted row-count">${total} row${total !== 1 ? "s" : ""}</p>`;
+      : `<p class="row-count">${total} row${total !== 1 ? "s" : ""}</p>`;
 
-  // Insert row — one input per non-PK column, pinned to bottom of table
   const insertCols = columns.filter((c) => !c.pk);
-  const colSignals = insertCols.map((c) => `${c.name}:''`).join(",");
-  const signalsAttr = colSignals ? `{${colSignals}}` : `{}`;
   const resetSignals = insertCols.map((c) => `$${c.name}=''`).join(";");
-
   const insertCells = columns
     .map((c) => {
       if (c.pk) return `<td class="text-faint pk-cell">—</td>`;
       const hasDefault = c.dflt_value != null;
-      const placeholder = hasDefault
-        ? `default: ${c.dflt_value}`
-        : c.type || "text";
+      const placeholder = hasDefault ? `default: ${c.dflt_value}` : c.type || "text";
       const required = c.notnull && !hasDefault ? " required" : "";
       return `<td><input data-bind:${c.name} placeholder="${placeholder}"${required}></td>`;
     })
     .join("");
-
   const insertRow =
     insertCols.length > 0
       ? `<tr>${insertCells}<td><button class="primary" data-on:click="@post('${basePath}/tables/${table}')${resetSignals ? `;${resetSignals}` : ""}">Add</button></td></tr>`
       : "";
 
-  const tabBar =
-    tables.length > 0
-      ? `<nav id="table-tabs" class="tab-bar">${tables.map((t) => `<a href="${basePath}/tables/${t}" data-on:click="@get('${basePath}/tables/${t}')"${t === table ? ' class="active"' : ""}>${t}</a>`).join("")}</nav>`
-      : "";
+  return `<div id="rows-container" class="rows-container"><div class="rows-card"><table><thead><tr>${headers}<th></th></tr></thead><tbody id="rows-${table}">${insertRow}${dataRows}</tbody></table>${pagination}</div></div>`;
+}
+
+export function rowsView(opts: {
+  table: string;
+  tables: string[];
+  columns: Column[];
+  rows: Record<string, unknown>[];
+  page: number;
+  total: number;
+  limit: number;
+  basePath: string;
+}): string {
+  const { table, tables, columns, rows, page, total, limit, basePath } = opts;
+  const insertCols = columns.filter((c) => !c.pk);
+  const colSignals = insertCols.map((c) => `${c.name}:''`).join(",");
+  const signalsAttr = colSignals ? `{${colSignals}}` : `{}`;
 
   return String(
     html`<div
@@ -223,21 +411,10 @@ export function rowsView(opts: {
       data-signals="${raw(signalsAttr)}"
     >
       <style>
-        ${rowsStyles}
+        ${raw(rowsStyles)}
       </style>
-      ${raw(tabBar)}
-      <table>
-        <thead>
-          <tr>
-            ${raw(headers)}
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="rows-${table}">
-          ${raw(insertRow)} ${raw(dataRows)}
-        </tbody>
-      </table>
-      ${raw(pagination)}
+      ${raw(buildTabBar(tables, table, basePath))}
+      ${raw(buildRowsContainer({ table, columns, rows, page, total, limit, basePath }))}
     </div>`,
   );
 }

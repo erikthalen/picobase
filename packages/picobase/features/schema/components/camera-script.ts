@@ -443,7 +443,12 @@ export function cameraScript(
         var rect = container.getBoundingClientRect();
         var i = Math.round(camera.z * 100) / 25;
         var next = Math.max(0.25, (i + dir) * 0.25);
+        wrap.style.transition = "transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
         zoomCamera(rect.width / 2, rect.height / 2, camera.z - next);
+        wrap.addEventListener("transitionend", function onDone() {
+          wrap.style.transition = "";
+          wrap.removeEventListener("transitionend", onDone);
+        });
       }
       if (btnIn)
         btnIn.addEventListener("click", function () {

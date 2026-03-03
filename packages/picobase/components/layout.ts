@@ -44,7 +44,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
 
           <script
             type="module"
-            src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.7/bundles/datastar.js"
+            src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.8/bundles/datastar.js"
           ></script>
           <style>
             :root {
@@ -299,7 +299,6 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               background: rgba(255, 255, 255, 0.02);
             }
             button {
-              height: 28px;
               user-select: none;
               cursor: pointer;
               padding: 0.375rem 0.75rem;

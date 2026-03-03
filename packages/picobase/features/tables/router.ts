@@ -4,7 +4,7 @@ import { respond, sseAction } from "../../components/sse.ts";
 import { listTables } from "../../db/schema-queries.ts";
 import type { AppEnv } from "../../index.ts";
 import { countRows, getColumns, getRows } from "./queries.ts";
-import { rowsView, tableListView } from "./views.ts";
+import { buildRowsContainer, buildTabBar, rowsView, tableListView } from "./views.ts";
 
 const LIMIT = 50;
 
@@ -42,20 +42,15 @@ export function createTablesRouter(): Hono<AppEnv> {
 			limit: LIMIT,
 			offset: (page - 1) * LIMIT,
 		});
-		const content = rowsView({
-			table: tableName,
-			tables,
-			columns,
-			rows,
-			page,
-			total,
-			limit: LIMIT,
-			basePath: base,
-		});
-		const navHtml = nav({ basePath: base, activeSection: "schema", tables });
-		return respond(c, {
-			fullPage: () => layout({ title: tableName, nav: navHtml, content }),
-			fragment: () => `<main id="main">${content}</main>`,
+		const isDatastar = c.req.header("accept")?.includes("text/event-stream");
+		if (!isDatastar) {
+			const content = rowsView({ table: tableName, tables, columns, rows, page, total, limit: LIMIT, basePath: base });
+			const navHtml = nav({ basePath: base, activeSection: "schema", tables });
+			return c.html(layout({ title: tableName, nav: navHtml, content }));
+		}
+		return sseAction(c, async ({ patchElements }) => {
+			await patchElements(buildTabBar(tables, tableName, base));
+			await patchElements(buildRowsContainer({ table: tableName, columns, rows, page, total, limit: LIMIT, basePath: base }));
 		});
 	});
 
