@@ -2,8 +2,9 @@
 	"name": "@picobase/repo",
 	"private": true,
 	"scripts": {
-		"dev": "pnpm -r dev",
-		"start": "pnpm -r start",
+		"dev": "pnpm -r --parallel dev",
+		"build": "pnpm -r --parallel build",
+		"start": "pnpm -r --parallel start",
 		"seed": "pnpm -r seed",
 		"format": "biome format --write .",
 		"check": "biome check --write ."

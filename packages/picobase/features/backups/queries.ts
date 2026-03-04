@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 export interface BackupEntry {
@@ -6,7 +6,7 @@ export interface BackupEntry {
 	path: string;
 	size: number;
 	createdAt: Date;
-	type: "backup" | "upload";
+	type: "backup" | "upload" | "original";
 }
 
 export function createBackup(dbPath: string, backupsDir: string): string {
@@ -45,6 +45,19 @@ export function saveUploadedDb(backupsDir: string, filename: string, data: Buffe
 
 export function deleteBackup(backupsDir: string, name: string): void {
 	unlinkSync(join(backupsDir, name));
+}
+
+export function readSettings(backupsDir: string): { activeDatabase?: string } {
+	try {
+		return JSON.parse(readFileSync(join(backupsDir, "picobase-settings.json"), "utf-8"));
+	} catch {
+		return {};
+	}
+}
+
+export function writeSettings(backupsDir: string, data: { activeDatabase: string }): void {
+	mkdirSync(backupsDir, { recursive: true });
+	writeFileSync(join(backupsDir, "picobase-settings.json"), JSON.stringify(data, null, 2));
 }
 
 export function restoreBackup(

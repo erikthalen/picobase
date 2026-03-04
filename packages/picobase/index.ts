@@ -2,6 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { Hono } from "hono";
 import { createDb } from "./db/client.ts";
 import { createBackupsRouter } from "./features/backups/router.ts";
+import { readSettings, writeSettings } from "./features/backups/queries.ts";
 import { createMigrationsRouter } from "./features/migrations/router.ts";
 import { createSchemaRouter } from "./features/schema/router.ts";
 import { createTablesRouter } from "./features/tables/router.ts";
@@ -22,9 +23,25 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
     backupsDir: config.backupsDir ?? "./backups",
   };
 
+  const originalDatabase = config.database;
+
+  // Override active database if a settings file exists from a previous mount
+  const settings = readSettings(resolved.backupsDir);
+  if (settings.activeDatabase) {
+    resolved.database = settings.activeDatabase;
+  }
+
   let db = createDb(resolved.database);
-  const reconnectDb = () => {
-    db = createDb(resolved.database);
+
+  const mountDb = (newPath: string) => {
+    try {
+      db.close();
+    } catch {
+      /* already closed */
+    }
+    resolved.database = newPath;
+    db = createDb(newPath);
+    writeSettings(resolved.backupsDir, { activeDatabase: newPath });
   };
 
   const app = new Hono<AppEnv>();
@@ -43,13 +60,13 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
   app.route("/tables", createTablesRouter());
   app.route("/schema", createSchemaRouter());
   app.route("/migrations", createMigrationsRouter());
-  app.route("/backups", createBackupsRouter(reconnectDb));
+  app.route("/backups", createBackupsRouter({ originalDatabase, mountDb }));
 
   // Graceful shutdown handler
   function shutdown() {
     console.log("Closing database...");
     try {
-      db.close(); // synchronous
+      db.close();
       console.log("Database closed.");
     } catch (err) {
       console.error("Error closing database:", err);
@@ -57,9 +74,8 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
     process.exit(0);
   }
 
-  // Handle termination signals
-  process.on("SIGINT", shutdown); // Ctrl+C
-  process.on("SIGTERM", shutdown); // Docker, PM2, etc.
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
   return app;
 }

@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import { html, raw } from "hono/html";
 import type { BackupEntry } from "./queries.ts";
 
@@ -8,7 +9,7 @@ const styles = css`
   }
   .backups-container {
     padding: 4.5rem 1.5rem 6rem;
-    max-width: 780px;
+    max-width: 880px;
     margin-inline: auto;
   }
   .backups-card {
@@ -44,6 +45,24 @@ const styles = css`
   .backups-controls .ctrl-group button:hover {
     border-color: transparent;
   }
+  .active-db-indicator {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    color: var(--pb-text-muted);
+  }
+  .active-db-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+  .active-db-name {
+    font-family: var(--pb-monospace);
+  }
   .backups-card-footer {
     padding: 1rem;
     border-top: 1px solid var(--pb-border);
@@ -58,44 +77,27 @@ const styles = css`
     font-family: monospace;
     font-size: 0.8rem;
   }
-  .restore-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
+  .backup-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-left: 4px;
   }
-  .restore-backdrop {
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .upload-badge {
+    background: var(--pb-badge-pk-bg);
+    color: var(--pb-badge-pk-fg);
   }
-  .restore-modal {
-    background: var(--pb-surface);
-    border-radius: 8px;
-    padding: 1.5rem;
-    width: 100%;
-    max-width: 380px;
-    box-shadow: var(--pb-shadow-sm);
+  .original-badge {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
   }
-  .restore-modal-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+  .active-badge {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
   }
-  .restore-modal-body {
-    font-size: 0.875rem;
-    margin-bottom: 1.25rem;
-    color: var(--pb-text-muted);
-  }
-  .restore-filename {
-    font-family: monospace;
-    color: inherit;
-  }
-  .restore-actions {
-    display: flex;
-    gap: 0.5rem;
+  tr.active-row td {
+    background: rgba(34, 197, 94, 0.04);
   }
   .backup-actions-cell {
     justify-content: flex-end;
@@ -128,15 +130,6 @@ const styles = css`
     bottom: 0;
     width: 1px;
     background: var(--pb-border);
-  }
-  .upload-badge {
-    font-size: 0.65rem;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--pb-badge-pk-bg);
-    color: var(--pb-badge-pk-fg);
-    vertical-align: middle;
-    margin-left: 4px;
   }
   .upload-zone {
     border: 2px dashed var(--pb-border);
@@ -174,65 +167,6 @@ const styles = css`
   }
   .upload-zone-subtitle {
     font-size: 0.8rem;
-  }
-  .backups-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 5rem 2rem 25vh;
-    text-align: center;
-    gap: 1.5rem;
-    height: 100vh;
-  }
-  .backups-empty-dropzone {
-    border: 2px dashed var(--pb-border);
-    border-radius: 12px;
-    padding: 3rem 4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    user-select: none;
-    transition:
-      border-color 0.15s,
-      background-color 0.15s;
-    max-width: 400px;
-    width: 100%;
-  }
-  .backups-empty-dropzone:hover,
-  .backups-empty-dropzone.drag-over {
-    border-color: var(--pb-text-muted);
-    background-color: var(--pb-bg);
-  }
-  .backups-empty-dropzone.uploading {
-    opacity: 0.6;
-    cursor: wait;
-    pointer-events: none;
-  }
-  .backups-empty-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--pb-text-faint);
-    margin-bottom: 0.5rem;
-  }
-  .backups-empty-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0;
-  }
-  .backups-empty-body {
-    font-size: 0.875rem;
-    color: var(--pb-text-muted);
-    max-width: 300px;
-    margin: 0;
-    line-height: 1.5;
-  }
-  .backups-empty-hint {
-    font-size: 0.8rem;
-    color: var(--pb-text-faint);
   }
   .delete-confirm-dialog {
     background: var(--pb-surface);
@@ -294,20 +228,49 @@ function formatBytes(b: number): string {
   return `${(b / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export function backupsListRows(backups: BackupEntry[]): string {
+export function backupsListRows(
+  backups: BackupEntry[],
+  basePath: string,
+  activeDatabase: string,
+): string {
   if (backups.length === 0) {
-    return '<tr><td colspan="5" class="text-muted">No backups yet.</td></tr>';
+    return '<tr><td colspan="4" class="text-muted">No backups yet.</td></tr>';
   }
   return backups
     .map((b) => {
-      const label = b.createdAt.toLocaleString();
-      const badge =
-        b.type === "upload" ? '<span class="upload-badge">upload</span>' : "";
-      return `<tr>
-  <td class="backup-filename">${b.name}${badge}</td>
+      const isActive = b.path === activeDatabase;
+      const label =
+        b.createdAt.getTime() === 0 ? "—" : b.createdAt.toLocaleString();
+
+      const typeBadge =
+        b.type === "upload"
+          ? '<span class="backup-badge upload-badge">upload</span>'
+          : b.type === "original"
+            ? '<span class="backup-badge original-badge">original</span>'
+            : "";
+      const activeBadge = isActive
+        ? '<span class="backup-badge active-badge">active</span>'
+        : "";
+
+      const mountUrl =
+        b.type === "original"
+          ? `${basePath}/backups/~original/mount`
+          : `${basePath}/backups/${encodeURIComponent(b.name)}/mount`;
+
+      const mountBtn = isActive
+        ? `<button disabled><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg></button>`
+        : `<button data-on:click="@post('${mountUrl}')">Mount</button>`;
+
+      const deleteBtn =
+        b.type !== "original"
+          ? `<button class="danger" data-on:click="$_deleteTarget='${b.name}'; $_deleteConfirm=''; document.getElementById('delete-confirm-dialog').showModal()">Delete</button>`
+          : "";
+
+      return `<tr${isActive ? ' class="active-row"' : ""}>
+  <td class="backup-filename">${b.name}${typeBadge}${activeBadge}</td>
   <td>${label}</td>
   <td>${formatBytes(b.size)}</td>
-  <td class="backup-actions-cell"><div class="backup-btn-group"><button data-on:click="$_restoreTarget='${b.name}'">Restore</button><button class="danger" data-on:click="$_deleteTarget='${b.name}'; $_deleteConfirm=''; document.getElementById('delete-confirm-dialog').showModal()">Delete</button></div></td>
+  <td class="backup-actions-cell"><div class="backup-btn-group">${mountBtn}${deleteBtn}</div></td>
 </tr>`;
     })
     .join("\n");
@@ -316,9 +279,11 @@ export function backupsListRows(backups: BackupEntry[]): string {
 export function backupsView(opts: {
   backups: BackupEntry[];
   basePath: string;
+  activeDatabase: string;
 }): string {
-  const { backups, basePath } = opts;
+  const { backups, basePath, activeDatabase } = opts;
   const base = basePath.replace(/\/$/, "");
+  const activeDbName = basename(activeDatabase);
 
   const uploadInput = html`<input
     type="file"
@@ -396,107 +361,25 @@ export function backupsView(opts: {
     </div>
   </dialog>`;
 
-  const restoreModal = html`<div
-    data-show="$_restoreTarget !== ''"
-    class="restore-overlay"
-  >
-    <div class="restore-backdrop">
-      <div class="restore-modal">
-        <h3 class="restore-modal-title">Restore database</h3>
-        <p class="restore-modal-body">
-          Restore from
-          <span class="restore-filename" data-text="$_restoreTarget"></span>?
-        </p>
-        <div class="restore-actions">
-          <button
-            class="primary"
-            data-on:click="@post('${base}/backups/' + $_restoreTarget + '/restore?backup=true'); $_restoreTarget=''"
-          >
-            Backup &amp; Restore
-          </button>
-          <button
-            data-on:click="@post('${base}/backups/' + $_restoreTarget + '/restore?backup=false'); $_restoreTarget=''"
-          >
-            Restore
-          </button>
-          <button data-on:click="$_restoreTarget=''">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  if (backups.length === 0) {
-    return String(
-      html`<div
-        id="backups-view"
-        data-signals="{_restoreTarget:'', _deleteTarget:'', _deleteConfirm:''}"
-      >
-        <style>
-          ${raw(styles)}
-        </style>
-        ${uploadInput}
-        <div class="backups-empty">
-          <label
-            for="upload-input"
-            id="upload-zone"
-            class="backups-empty-dropzone"
-            data-upload-url="${base}/backups/upload"
-          >
-            <div class="backups-empty-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-upload"
-              >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                <path d="M7 9l5 -5l5 5" />
-                <path d="M12 4l0 12" />
-              </svg>
-            </div>
-            <h3 class="backups-empty-title">No backups yet</h3>
-            <p class="backups-empty-body">
-              Drop a SQLite database file here to upload it as a backup.
-            </p>
-            <span class="backups-empty-hint"
-              >Accepts .db and .sqlite · click to browse</span
-            >
-          </label>
-          <button
-            class="primary create-backup-btn"
-            data-on:click="@post('${base}/backups')"
-          >
-            Create backup
-          </button>
-        </div>
-        ${uploadScript} ${deleteDialog} ${restoreModal}
-      </div>`,
-    );
-  }
-
-  const rows = backupsListRows(backups);
+  const rows = backupsListRows(backups, base, activeDatabase);
 
   return String(
     html`<div
       id="backups-view"
-      data-signals="{_restoreTarget:'', _deleteTarget:'', _deleteConfirm:''}"
+      data-signals="{_deleteTarget:'', _deleteConfirm:''}"
     >
       <style>
         ${raw(styles)}
       </style>
       <div class="backups-controls">
         <div class="ctrl-group">
-          <button
-            class="primary"
-            data-on:click="@post('${base}/backups')"
-          >
+          <span class="active-db-indicator">
+            <span class="active-db-dot"></span>
+            <span class="active-db-name">${activeDbName}</span>
+          </span>
+        </div>
+        <div class="ctrl-group">
+          <button class="primary" data-on:click="@post('${base}/backups')">
             Create backup
           </button>
         </div>
@@ -551,7 +434,7 @@ export function backupsView(opts: {
         </div>
       </div>
 
-      ${uploadScript} ${deleteDialog} ${restoreModal}
+      ${uploadScript} ${deleteDialog}
     </div>`,
   );
 }

@@ -1,3 +1,5 @@
+import { statSync } from "node:fs";
+import { basename, join } from "node:path";
 import { Hono } from "hono";
 import { layout, nav, toastHtml } from "../../components/layout.ts";
 import { respond, sseAction } from "../../components/sse.ts";
@@ -7,12 +9,29 @@ import {
   createBackup,
   deleteBackup,
   listBackups,
-  restoreBackup,
   saveUploadedDb,
+  type BackupEntry,
 } from "./queries.ts";
 import { backupsListRows, backupsView } from "./views.ts";
 
-export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
+function makeOriginalEntry(dbPath: string): BackupEntry {
+  let size = 0;
+  let createdAt = new Date(0);
+  try {
+    const stat = statSync(dbPath);
+    size = stat.size;
+    createdAt = stat.birthtime;
+  } catch {
+    /* file may not exist yet */
+  }
+  return { name: basename(dbPath), path: dbPath, size, createdAt, type: "original" };
+}
+
+export function createBackupsRouter(opts: {
+  originalDatabase: string;
+  mountDb: (path: string) => void;
+}): Hono<AppEnv> {
+  const { originalDatabase, mountDb } = opts;
   const app = new Hono<AppEnv>();
 
   app.get("/", async (c) => {
@@ -20,8 +39,8 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     const tables = listTables(db);
-    const backups = listBackups(config.backupsDir);
-    const content = backupsView({ backups, basePath: base });
+    const backups = [makeOriginalEntry(originalDatabase), ...listBackups(config.backupsDir)];
+    const content = backupsView({ backups, basePath: base, activeDatabase: config.database });
     const navHtml = nav({ basePath: base, activeSection: "backups", tables });
     return respond(c, {
       fullPage: () => layout({ title: "Backups", nav: navHtml, content }),
@@ -34,10 +53,10 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     const backupName = createBackup(config.database, config.backupsDir);
-    const backups = listBackups(config.backupsDir);
+    const backups = [makeOriginalEntry(originalDatabase), ...listBackups(config.backupsDir)];
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(
-        `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
+        `<main id="main">${backupsView({ backups, basePath: base, activeDatabase: config.database })}</main>`,
       );
       await patchElements(
         toastHtml("Backup created", `Saved as <code>${backupName}</code>.`),
@@ -73,51 +92,32 @@ export function createBackupsRouter(reconnectDb: () => void): Hono<AppEnv> {
     } catch {
       // file already gone
     }
-    const backups = listBackups(config.backupsDir);
+    const backups = [makeOriginalEntry(originalDatabase), ...listBackups(config.backupsDir)];
     return sseAction(c, async ({ patchElements }) => {
-      if (backups.length === 0) {
-        await patchElements(
-          `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
-        );
-      } else {
-        await patchElements(
-          `<tbody id="backups-list">${backupsListRows(backups)}</tbody>`,
-        );
-      }
+      await patchElements(
+        `<tbody id="backups-list">${backupsListRows(backups, base, config.database)}</tbody>`,
+      );
     });
   });
 
-  // Restore from a backup — static route before parameterized (none here, but good practice)
-  app.post("/:name/restore", async (c) => {
-    const db = c.get("db");
+  // Mount a database file as the active database
+  app.post("/:name/mount", async (c) => {
     const config = c.get("config");
-    const name = decodeURIComponent(c.req.param("name"));
     const base = config.basePath.replace(/\/$/, "");
-    const backup = c.req.query("backup") !== "false";
-    try {
-      db.close();
-    } catch {
-      /* already closed or errored */
-    }
-    const safetyName = restoreBackup(
-      config.database,
-      config.backupsDir,
-      name,
-      backup,
-    );
-    reconnectDb();
-    const backups = listBackups(config.backupsDir);
-    const body = safetyName
-      ? `Restored from:<br><code>${name}</code>.<br><br>A safety backup was saved as:<br><code>${safetyName}</code>.`
-      : `Restored from:<br><code>${name}</code>.`;
+    const name = decodeURIComponent(c.req.param("name"));
+    const newPath = name === "~original"
+      ? originalDatabase
+      : join(config.backupsDir, name);
+    mountDb(newPath);
+    const backups = [makeOriginalEntry(originalDatabase), ...listBackups(config.backupsDir)];
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(
-        `<main id="main">${backupsView({ backups, basePath: base })}</main>`,
+        `<main id="main">${backupsView({ backups, basePath: base, activeDatabase: config.database })}</main>`,
       );
-      await patchElements(toastHtml("Database restored", body), {
-        selector: "#toast-container",
-        mode: "append",
-      });
+      await patchElements(
+        toastHtml("Database mounted", `Now using <code>${basename(newPath)}</code>.`),
+        { selector: "#toast-container", mode: "append" },
+      );
     });
   });
 

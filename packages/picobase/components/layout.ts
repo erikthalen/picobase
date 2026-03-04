@@ -318,7 +318,10 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
                 border-color 0.12s,
                 color 0.12s;
             }
-            button:hover {
+            button[disabled] {
+              cursor: default;
+            }
+            button:not([disabled]):hover {
               background: rgba(255, 255, 255, 0.06);
               border-color: rgba(255, 255, 255, 0.2);
             }

@@ -8,7 +8,7 @@ const styles = css`
   }
   .migrations-container {
     padding: 4.5rem 1.5rem 6rem;
-    max-width: 780px;
+    max-width: 880px;
     margin-inline: auto;
   }
   .migrations-card {
@@ -91,10 +91,19 @@ const styles = css`
     border-radius: 8px;
     padding: 1rem 1.25rem;
   }
-  .sql-keyword { color: var(--pb-syntax-keyword); }
-  .sql-string  { color: var(--pb-syntax-string); }
-  .sql-comment { color: var(--pb-syntax-comment); font-style: italic; }
-  .sql-number  { color: var(--pb-syntax-number); }
+  .sql-keyword {
+    color: var(--pb-syntax-keyword);
+  }
+  .sql-string {
+    color: var(--pb-syntax-string);
+  }
+  .sql-comment {
+    color: var(--pb-syntax-comment);
+    font-style: italic;
+  }
+  .sql-number {
+    color: var(--pb-syntax-number);
+  }
   #migration-editor {
     background: var(--pb-surface);
     border: 1px solid var(--pb-border);
@@ -211,8 +220,10 @@ export function migrationsView(opts: {
   const sqlDialog = html`
     <dialog id="migration-sql-dialog" closedby="any">
       <div class="migration-sql-dialog-header">
-        <h3 class="migration-sql-dialog-title" id="migration-sql-dialog-title">
-        </h3>
+        <h3
+          class="migration-sql-dialog-title"
+          id="migration-sql-dialog-title"
+        ></h3>
         <form method="dialog">
           <button type="submit">Close</button>
         </form>
