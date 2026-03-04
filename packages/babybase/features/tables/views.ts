@@ -84,6 +84,7 @@ const rowsStyles = css`
     border-color: transparent;
   }
   .table-tabs-wrap {
+    position: relative;
     background: var(--pb-surface);
     border: 1px solid var(--pb-border);
     border-radius: 10px;
@@ -160,6 +161,9 @@ const rowsStyles = css`
     border: 1px solid var(--pb-border);
     border-radius: 12px;
     overflow: hidden;
+  }
+  .rows-table-wrap {
+    overflow-x: auto;
   }
   .row-count {
     padding: 0.625rem 0.875rem;
@@ -267,7 +271,7 @@ export function buildTabBar(
     wrap.classList.toggle('fade-right', max > 2 && sl < max - 2);
   }
   nav.addEventListener('scroll', update);
-  update();
+  setTimeout(() => update(), 50);
 })();
 </script>`;
 }
@@ -353,7 +357,7 @@ export function buildRowsContainer(opts: {
       ? `<tr>${insertCells}<td><button class="primary" data-on:click="@post('${basePath}/tables/${table}')${resetSignals ? `;${resetSignals}` : ""}">Add</button></td></tr>`
       : "";
 
-  return `<div id="rows-container" class="rows-container"><div class="rows-card"><table><thead><tr>${headers}<th></th></tr></thead><tbody id="rows-${table}">${insertRow}${dataRows}</tbody></table>${pagination}</div></div>`;
+  return `<div id="rows-container" class="rows-container"><div class="rows-card"><div class="rows-table-wrap"><table><thead><tr>${headers}<th></th></tr></thead><tbody id="rows-${table}">${insertRow}${dataRows}</tbody></table></div>${pagination}</div></div>`;
 }
 
 export function rowsView(opts: {

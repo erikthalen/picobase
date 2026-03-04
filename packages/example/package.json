@@ -1,6 +1,7 @@
 {
   "name": "@babybase/example",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "node --watch ./server.ts",
     "start": "node ./server.ts",

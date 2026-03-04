@@ -18,7 +18,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 
   // List all tables — redirect to first table if any exist
   app.get("/", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const tables = listTables(db);
     const base = config.basePath.replace(/\/$/, "");
@@ -35,7 +35,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 
   // View rows for a table
   app.get("/:table", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const tableName = c.req.param("table");
     const page = Number(c.req.query("page") ?? 1);
@@ -80,7 +80,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 
   // Insert row
   app.post("/:table", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const tableName = c.req.param("table");
     const body = (await c.req.json()) as Record<string, string>;
@@ -105,7 +105,7 @@ export function createTablesRouter(): Hono<AppEnv> {
 
   // Delete row
   app.delete("/:table/:rowid", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const tableName = c.req.param("table");
     const rowid = c.req.param("rowid");
     const pkCol = getColumns(db, tableName).find((col) => col.pk);

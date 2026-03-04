@@ -11,13 +11,18 @@ import type { BabybaseConfig } from "./types.ts";
 
 export type AppEnv = {
   Variables: {
-    db: DatabaseSync;
-    config: Required<BabybaseConfig>;
+    db: DatabaseSync | null;
+    config: {
+      database: string | undefined;
+      basePath: string;
+      migrationsDir: string;
+      storageDir: string;
+    };
   };
 };
 
-export function defineBabybase(config: BabybaseConfig): Hono<AppEnv> {
-  const resolved: Required<BabybaseConfig> = {
+export function defineBabybase(config: BabybaseConfig = {}): Hono<AppEnv> {
+  const resolved: AppEnv["Variables"]["config"] = {
     database: config.database,
     basePath: config.basePath ?? "/",
     migrationsDir: config.migrationsDir ?? "./.babybase/migrations",
@@ -33,17 +38,28 @@ export function defineBabybase(config: BabybaseConfig): Hono<AppEnv> {
     resolved.database = settings.activeDatabase;
   }
 
-  let db = createDb(resolved.database);
+  let db: DatabaseSync | null = resolved.database ? createDb(resolved.database) : null;
 
   const mountDb = (newPath: string) => {
     try {
-      db.close();
+      db?.close();
     } catch {
       /* already closed */
     }
     resolved.database = newPath;
     db = createDb(newPath);
     writeSettings(babybaseDir, { activeDatabase: newPath });
+  };
+
+  const unmountDb = () => {
+    try {
+      db?.close();
+    } catch {
+      /* already closed */
+    }
+    db = null;
+    resolved.database = originalDatabase;
+    writeSettings(babybaseDir, {});
   };
 
   const app = new Hono<AppEnv>();
@@ -55,23 +71,34 @@ export function defineBabybase(config: BabybaseConfig): Hono<AppEnv> {
     await next();
   });
 
-  app.get("/", (c) =>
-    c.redirect(`${resolved.basePath.replace(/\/$/, "")}/schema`),
-  );
+  // Redirect to /storage when no database is loaded
+  app.use("*", async (c, next) => {
+    if (db === null && !c.req.path.startsWith("/storage")) {
+      return c.redirect(`${resolved.basePath.replace(/\/$/, "")}/storage`);
+    }
+    await next();
+  });
+
+  app.get("/", (c) => {
+    const base = resolved.basePath.replace(/\/$/, "");
+    return c.redirect(db === null ? `${base}/storage` : `${base}/schema`);
+  });
 
   app.route("/tables", createTablesRouter());
   app.route("/schema", createSchemaRouter());
   app.route("/migrations", createMigrationsRouter());
-  app.route("/storage", createStorageRouter({ originalDatabase, mountDb }));
+  app.route("/storage", createStorageRouter({ originalDatabase, mountDb, unmountDb }));
 
   // Graceful shutdown handler
   function shutdown() {
-    console.log("Closing database...");
-    try {
-      db.close();
-      console.log("Database closed.");
-    } catch (err) {
-      console.error("Error closing database:", err);
+    if (db) {
+      console.log("Closing database...");
+      try {
+        db.close();
+        console.log("Database closed.");
+      } catch (err) {
+        console.error("Error closing database:", err);
+      }
     }
     process.exit(0);
   }

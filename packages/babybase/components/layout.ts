@@ -134,6 +134,7 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               gap: 2px;
               z-index: 100;
               box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+              overflow: hidden;
             }
             .floating-nav a {
               display: flex;
@@ -150,6 +151,34 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               transition:
                 background 0.12s,
                 color 0.12s;
+            }
+            @keyframes nav-link-in {
+              from {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            @keyframes nav-link-out {
+              from {
+                opacity: 1;
+                transform: translateY(0);
+              }
+              to {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+            }
+            ::view-transition-new(nav-schema),
+            ::view-transition-new(nav-migrations) {
+              animation: nav-link-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            ::view-transition-old(nav-schema),
+            ::view-transition-old(nav-migrations) {
+              animation: nav-link-out 0.2s ease;
             }
             .floating-nav a svg {
               flex-shrink: 0;
@@ -190,12 +219,13 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
             table {
               --cols: 1;
               background: var(--pb-surface);
-              overflow: hidden;
 
               display: grid;
               grid-template-columns: repeat(var(--cols), minmax(0, auto));
               min-width: 100%;
               width: max-content;
+
+              border-radius: 12px 12px 0 0;
             }
 
             table.even {
@@ -290,6 +320,14 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
 
               position: sticky;
               top: 0;
+            }
+
+            th:first-child {
+              border-radius: 12px 0 0 0;
+            }
+
+            th:last-child {
+              border-radius: 0 12px 0 0;
             }
 
             tr:last-child td {
@@ -508,22 +546,25 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               top: 1rem;
               right: 1rem;
               z-index: 200;
-              display: flex;
-              flex-direction: column;
-              gap: 0.5rem;
               pointer-events: none;
+              display: grid;
+              width: 320px;
             }
             @keyframes toast-in {
               from {
                 opacity: 0;
-                transform: translateY(-0.75rem);
+                transform: translateY(-0.5rem);
               }
               to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0);
               }
             }
             .toast {
+              grid-row: 1;
+              grid-column: 1;
+              align-self: start;
+              width: 100%;
               background: var(--pb-surface);
               border: 1px solid var(--pb-border);
               border-radius: 8px;
@@ -531,10 +572,35 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
               display: flex;
               align-items: flex-start;
               gap: 0.75rem;
-              max-width: 320px;
               box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+              pointer-events: none;
+              animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+              transition:
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.25s ease;
+            }
+            /* newest — on top, fully interactive */
+            .toast:first-child {
               pointer-events: all;
-              animation: toast-in 0.2s ease;
+              z-index: 3;
+              transform: translateY(0);
+            }
+            /* second — peeks below */
+            .toast:nth-child(2) {
+              z-index: 2;
+              transform: translateY(-4px);
+            }
+            /* third — peeks further */
+            .toast:nth-child(3) {
+              z-index: 1;
+              transform: translateY(-8px);
+            }
+            /* rest — hidden but still in flow */
+            .toast:nth-child(n+4) {
+              z-index: 0;
+              transform: translateY(-12px);
+              opacity: 0;
+              pointer-events: none;
             }
             .toast-content {
               flex: 1;
@@ -572,7 +638,10 @@ export function layout({ title, nav: navHtml, content }: LayoutProps): string {
             }
             #toast-clear-all {
               display: none;
-              align-self: flex-end;
+              grid-row: 2;
+              grid-column: 1;
+              justify-self: end;
+              margin-top: 0.4rem;
               font-size: 0.75rem;
               color: var(--pb-text-muted);
               border-color: transparent;
@@ -642,19 +711,33 @@ interface NavProps {
   basePath: string;
   activeSection: "schema" | "migrations" | "storage";
   tables?: string[];
+  hasDatabase?: boolean;
 }
 
-export function nav({ basePath, activeSection }: NavProps): string {
+export function nav({
+  basePath,
+  activeSection,
+  hasDatabase = true,
+}: NavProps): string {
   const base = basePath.replace(/\/$/, "");
 
-  const link = (path: string, label: string, section: string, icon: string) =>
-    html`<a
+  const link = (
+    path: string,
+    label: string,
+    section: string,
+    icon: string,
+    vtName?: string,
+  ) => {
+    const cls = activeSection === section ? "active" : "";
+    return html`<a
       href="${base}${path}"
       data-on:click="@get('${base}${path}')"
-      ${activeSection === section ? " class=active" : ""}
+      ${raw(cls ? `class="${cls}"` : "")}
+      ${raw(vtName ? `style="view-transition-name: ${vtName}"` : "")}
     >
       ${raw(icon)} ${label}
     </a>`;
+  };
 
   return String(html`
     <div class="site-logo">
@@ -683,8 +766,8 @@ export function nav({ basePath, activeSection }: NavProps): string {
       </svg>
     </div>
 
-    <nav class="floating-nav">
-      ${link(
+    <nav id="floating-nav" class="floating-nav" style="view-transition-name: floating-nav">
+      ${raw(hasDatabase ? String(link(
         "/schema",
         "Schema",
         "schema",
@@ -712,8 +795,9 @@ export function nav({ basePath, activeSection }: NavProps): string {
           <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
           <path d="M12 9l0 3" />
         </svg>`.toString(),
-      )}
-      ${link(
+        "nav-schema",
+      )) : "")}
+      ${raw(hasDatabase ? String(link(
         "/migrations",
         "Migrations",
         "migrations",
@@ -734,7 +818,9 @@ export function nav({ basePath, activeSection }: NavProps): string {
           <path d="M13 16l4 4l4 -4" />
           <path d="M17 10l0 10" />
         </svg>`.toString(),
-      )}
+        "nav-migrations",
+      )) : "")}
+
       ${link(
         "/storage",
         "Storage",
@@ -763,6 +849,34 @@ export function nav({ basePath, activeSection }: NavProps): string {
       )}
     </nav>
   `);
+}
+
+export function navElement(props: NavProps): string {
+  // Returns just the <nav id="floating-nav"> element for SSE patching
+  const base = props.basePath.replace(/\/$/, "");
+  const activeSection = props.activeSection;
+  const hasDatabase = props.hasDatabase ?? true;
+
+  const link = (
+    path: string,
+    label: string,
+    section: string,
+    icon: string,
+    vtName?: string,
+  ) => {
+    const cls = activeSection === section ? "active" : "";
+    return `<a href="${base}${path}" data-on:click="@get('${base}${path}')"${cls ? ` class="${cls}"` : ""}${vtName ? ` style="view-transition-name: ${vtName}"` : ""}>${icon} ${label}</a>`;
+  };
+
+  const schemaIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2"/><path d="M15 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2"/><path d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2"/><path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1"/><path d="M12 9l0 3"/></svg>`;
+  const migrationsIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 8l4 -4l4 4"/><path d="M7 4l0 9"/><path d="M13 16l4 4l4 -4"/><path d="M17 10l0 10"/></svg>`;
+  const storageIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6c0 1.657 3.582 3 8 3s8 -1.343 8 -3s-3.582 -3 -8 -3s-8 1.343 -8 3"/><path d="M4 6v6c0 1.657 3.582 3 8 3c1.118 0 2.183 -.086 3.15 -.241"/><path d="M20 12v-6"/><path d="M4 12v6c0 1.657 3.582 3 8 3c.157 0 .312 -.002 .466 -.005"/><path d="M16 19h6"/><path d="M19 16l3 3l-3 3"/></svg>`;
+
+  const schemaLink = hasDatabase ? link("/schema", "Schema", "schema", schemaIcon, "nav-schema") : "";
+  const migrationsLink = hasDatabase ? link("/migrations", "Migrations", "migrations", migrationsIcon, "nav-migrations") : "";
+  const storageLink = link("/storage", "Storage", "storage", storageIcon);
+
+  return `<nav id="floating-nav" class="floating-nav" style="view-transition-name: floating-nav">${schemaLink}${migrationsLink}${storageLink}</nav>`;
 }
 
 export function toastHtml(

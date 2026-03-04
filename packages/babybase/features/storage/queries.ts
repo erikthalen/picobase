@@ -79,7 +79,7 @@ export function readSettings(storageDir: string): { activeDatabase?: string } {
 
 export function writeSettings(
   storageDir: string,
-  data: { activeDatabase: string },
+  data: { activeDatabase?: string },
 ): void {
   mkdirSync(storageDir, { recursive: true });
   writeFileSync(

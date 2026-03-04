@@ -19,7 +19,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
 
   app.get("/", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     ensureMigrationsTable(db);
@@ -40,7 +40,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
 
   // Save new migration file
   app.post("/", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const body = (await c.req.json()) as Record<string, string>;
     const filename = String(body.filename);
@@ -60,7 +60,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
 
   // Save and immediately run
   app.post("/save-and-run", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const body = (await c.req.json()) as Record<string, string>;
     const filename = String(body.filename);
@@ -83,7 +83,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
       if (errorMsg) {
         await patchElements(toastHtml("Migration failed", errorMsg, "error"), {
           selector: "#toast-container",
-          mode: "append",
+          mode: "prepend",
         });
       }
     });
@@ -91,7 +91,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
 
   // Run all pending migrations in order
   app.post("/run-all", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     ensureMigrationsTable(db);
     const files = getFileMigrations(config.migrationsDir);
@@ -117,7 +117,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
       if (errorMsg) {
         await patchElements(toastHtml("Migration failed", errorMsg, "error"), {
           selector: "#toast-container",
-          mode: "append",
+          mode: "prepend",
         });
       }
     });
@@ -126,7 +126,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
   // Run a single pending migration by filename
   // MUST be registered after /run-all and /save-and-run to avoid param capture
   app.post("/:name/run", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const name = decodeURIComponent(c.req.param("name"));
     ensureMigrationsTable(db);
@@ -146,7 +146,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
       if (errorMsg) {
         await patchElements(toastHtml("Migration failed", errorMsg, "error"), {
           selector: "#toast-container",
-          mode: "append",
+          mode: "prepend",
         });
       }
     });
@@ -154,7 +154,7 @@ export function createMigrationsRouter(): Hono<AppEnv> {
 
   // Delete a migration file and remove its applied record
   app.delete("/:name", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const name = decodeURIComponent(c.req.param("name"));
     ensureMigrationsTable(db);

@@ -27,17 +27,27 @@ export function ensurePendingChangesTable(db: DatabaseSync): void {
   )`);
 }
 
+function pendingTableExists(db: DatabaseSync): boolean {
+  return !!db
+    .prepare(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='_babybase_pending_changes'",
+    )
+    .get();
+}
+
 export function savePendingChanges(
   db: DatabaseSync,
   tableName: string,
   columns: DesiredColumn[],
 ): void {
+  ensurePendingChangesTable(db);
   db.prepare(
     "INSERT OR REPLACE INTO _babybase_pending_changes (table_name, desired_columns) VALUES (?, ?)",
   ).run(tableName, JSON.stringify(columns));
 }
 
 export function getAllPendingChanges(db: DatabaseSync): PendingChange[] {
+  if (!pendingTableExists(db)) return [];
   const rows = db
     .prepare(
       "SELECT table_name, desired_columns FROM _babybase_pending_changes ORDER BY table_name",
@@ -53,6 +63,7 @@ export function getPendingForTable(
   db: DatabaseSync,
   tableName: string,
 ): DesiredColumn[] | null {
+  if (!pendingTableExists(db)) return null;
   const row = db
     .prepare(
       "SELECT desired_columns FROM _babybase_pending_changes WHERE table_name = ?",
@@ -63,6 +74,7 @@ export function getPendingForTable(
 }
 
 export function clearPendingChanges(db: DatabaseSync): void {
+  if (!pendingTableExists(db)) return;
   db.exec("DELETE FROM _babybase_pending_changes");
 }
 
@@ -70,6 +82,7 @@ export function deletePendingForTable(
   db: DatabaseSync,
   tableName: string,
 ): void {
+  if (!pendingTableExists(db)) return;
   db.prepare("DELETE FROM _babybase_pending_changes WHERE table_name = ?").run(
     tableName,
   );

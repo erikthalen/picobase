@@ -22,7 +22,6 @@ import type { DesiredColumn } from "./queries.ts";
 import {
   clearPendingChanges,
   deletePendingForTable,
-  ensurePendingChangesTable,
   generateCreateTableSQL,
   generateDiffSQL,
   getAllPendingChanges,
@@ -55,14 +54,13 @@ export function createSchemaRouter(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
 
   app.get("/", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
     const tables = listTables(db);
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);
-    const content = erDiagramView(schema, base, pending);
+    const content = erDiagramView(schema, base, pending, config.database);
     const navHtml = nav({ basePath: base, activeSection: "schema", tables });
     return respond(c, {
       fullPage: () => layout({ title: "Schema", nav: navHtml, content }),
@@ -71,10 +69,9 @@ export function createSchemaRouter(): Hono<AppEnv> {
   });
 
   app.get("/table", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
     const tables = listTables(db);
     const schema = getFullSchema(db);
     const content = schemaListView(schema, base);
@@ -86,10 +83,9 @@ export function createSchemaRouter(): Hono<AppEnv> {
   });
 
   app.post("/tables", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
     let body: Record<string, string> = {};
     try {
       body = (await c.req.json()) as Record<string, string>;
@@ -104,7 +100,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
     }
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);
-    const content = erDiagramView(schema, base, pending);
+    const content = erDiagramView(schema, base, pending, config.database);
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
     });
@@ -124,10 +120,9 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Create a new table with column definitions
   app.post("/tables/new", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
     let body: Record<string, unknown> = {};
     try {
       body = (await c.req.json()) as Record<string, unknown>;
@@ -162,7 +157,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
     }
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);
-    const content = erDiagramView(schema, base, pending);
+    const content = erDiagramView(schema, base, pending, config.database);
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
     });
@@ -170,7 +165,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Add a new empty column row for the new-table dialog
   app.get("/tables/new-col-row", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const idx = Number(c.req.query("idx") ?? 0);
     const fullSchema = getFullSchema(db);
     const newRow = String(newEmptyColRow(idx, fullSchema));
@@ -195,11 +190,10 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Load edit dialog content for a specific table
   app.get("/tables/:name/edit-dialog", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     const tableName = c.req.param("name");
-    ensurePendingChangesTable(db);
     const dbColumns = getColumns(db, tableName);
     const pending = getPendingForTable(db, tableName);
     const fullSchema = getFullSchema(db);
@@ -253,7 +247,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Append a new empty column row to the dialog
   app.get("/tables/:name/new-column-row", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const idx = Number(c.req.query("idx") ?? 0);
     const tableName = c.req.param("name");
     const fullSchema = getFullSchema(db);
@@ -280,11 +274,10 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Save pending changes for a table (does NOT apply to DB yet)
   app.post("/tables/:name/pending", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     const tableName = c.req.param("name");
-    ensurePendingChangesTable(db);
 
     let body: Record<string, unknown> = {};
     try {
@@ -315,7 +308,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
     const schema = getFullSchema(db);
     const pending = getPendingColumnsMap(db);
-    const content = erDiagramView(schema, base, pending);
+    const content = erDiagramView(schema, base, pending, config.database);
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
     });
@@ -323,10 +316,9 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Return dialog content listing all pending changes with their SQL
   app.get("/edits-dialog", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
     const allPending = getAllPendingChanges(db);
     const entries = allPending.map(({ tableName, desiredColumns }) => {
       const current = getColumns(db, tableName);
@@ -347,11 +339,10 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Remove pending changes for a single table
   app.delete("/tables/:name/pending", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
     const tableName = c.req.param("name");
-    ensurePendingChangesTable(db);
     deletePendingForTable(db, tableName);
     const allPending = getAllPendingChanges(db);
     const pendingCount = allPending.length;
@@ -373,15 +364,14 @@ export function createSchemaRouter(): Hono<AppEnv> {
 
   // Publish: apply all pending changes, generate migration file
   app.post("/publish", async (c) => {
-    const db = c.get("db");
+    const db = c.get("db")!;
     const config = c.get("config");
     const base = config.basePath.replace(/\/$/, "");
-    ensurePendingChangesTable(db);
 
     const allPending = getAllPendingChanges(db);
     if (allPending.length === 0) {
       const schema = getFullSchema(db);
-      const content = erDiagramView(schema, base, new Map());
+      const content = erDiagramView(schema, base, new Map(), config.database);
       return sseAction(c, async ({ patchElements }) => {
         await patchElements(`<main id="main">${content}</main>`);
       });
@@ -416,7 +406,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
     clearPendingChanges(db);
 
     const schema = getFullSchema(db);
-    const content = erDiagramView(schema, base, new Map());
+    const content = erDiagramView(schema, base, new Map(), config.database);
     return sseAction(c, async ({ patchElements }) => {
       await patchElements(`<main id="main">${content}</main>`);
     });

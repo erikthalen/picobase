@@ -1,4 +1,5 @@
 import { html, raw } from "hono/html";
+import { activeDbIndicator } from "../storage/views.ts";
 import { cameraScript } from "./components/camera-script.ts";
 import { createTableDialog } from "./components/create-table-dialog.ts";
 import { editTableDialogShell } from "./components/edit-table-dialog.ts";
@@ -48,11 +49,12 @@ const diagramStyles = css`
   .er-diagram-controls {
     position: absolute;
     top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
     z-index: 10;
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 100vw;
     gap: 6px;
   }
   .ctrl-group {
@@ -117,6 +119,27 @@ const diagramStyles = css`
     max-width: 300px;
     margin: 0 0 0.5rem;
     line-height: 1.5;
+  }
+  .active-db-indicator {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    color: var(--pb-text-muted);
+  }
+  .active-db-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+  .active-db-dot--none {
+    background: var(--pb-text-faint);
+  }
+  .active-db-name {
+    font-family: var(--pb-monospace);
   }
 `;
 
@@ -195,16 +218,23 @@ export function erDiagramView(
   schema: TableSchema[],
   basePath: string,
   pendingColumns: Map<string, DesiredColumn[]> = new Map(),
+  activeDatabase?: string,
 ): string {
   if (schema.length === 0) {
     const base = basePath.replace(/\/$/, "");
+    const activeDbName = activeDatabase
+      ? activeDatabase.split("/").pop() ?? activeDatabase
+      : "No database";
     return String(
       html`<style>
           ${diagramStyles}
         </style>
         <div data-signals="{_tableName: ''}" class="er-diagram">
           <div class="er-diagram-body">
-            <div class="er-diagram-controls">${schemaActions(base, 0)}</div>
+            <div class="er-diagram-controls">
+              <div class="ctrl-group">${raw(activeDbIndicator(activeDbName, !!activeDatabase))}</div>
+              ${schemaActions(base, 0)}
+            </div>
             ${editTableDialogShell()} ${editsDialogShell()}
             <div id="diagram-viewport">
               <div class="er-diagram-empty">
@@ -304,6 +334,9 @@ export function erDiagramView(
   const canvasH = Math.max(2000, canvasContentH + 400);
   const base = basePath.replace(/\/$/, "");
   const pendingCount = pendingColumns.size;
+  const activeDbName = activeDatabase
+    ? activeDatabase.split("/").pop() ?? activeDatabase
+    : "No database";
 
   return String(
     html`<style>
@@ -313,6 +346,7 @@ export function erDiagramView(
       <div data-signals="{_tableName: ''}" class="er-diagram">
         <div class="er-diagram-body">
           <div class="er-diagram-controls">
+            <div class="ctrl-group">${raw(activeDbIndicator(activeDbName, !!activeDatabase))}</div>
             <div class="ctrl-group">${createTableDialog(base)}</div>
             <div class="ctrl-group">${zoomControls()}</div>
 

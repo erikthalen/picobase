@@ -16,7 +16,7 @@ const styles = css`
     background: var(--pb-surface);
     border: 1px solid var(--pb-border);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-y: clip;
   }
   .storage-controls {
     position: fixed;
@@ -72,6 +72,9 @@ const styles = css`
     background: #22c55e;
     flex-shrink: 0;
   }
+  .active-db-dot--none {
+    background: var(--pb-text-faint);
+  }
   .active-db-name {
     font-family: var(--pb-monospace);
   }
@@ -92,6 +95,11 @@ const styles = css`
     flex-direction: column;
     gap: 8px;
     align-items: baseline;
+  }
+  .backup-filepath {
+    font-size: 0.7rem;
+    color: var(--pb-text-faint);
+    word-break: break-all;
   }
   .backup-badges {
     display: flex;
@@ -254,13 +262,13 @@ function formatBytes(b: number): string {
 export function storageListRows(
   entries: BackupEntry[],
   basePath: string,
-  activeDatabase: string,
+  activeDatabase: string | undefined,
 ): string {
   if (entries.length === 0) {
     return '<tr><td colspan="4" class="text-muted">No files yet.</td></tr>';
   }
   return entries
-    .map((b) => {
+    .map((b, i) => {
       const isActive = b.path === activeDatabase;
       const label =
         b.createdAt.getTime() === 0 ? "—" : b.createdAt.toLocaleString();
@@ -280,10 +288,10 @@ export function storageListRows(
           ? `${basePath}/storage/~original/mount`
           : `${basePath}/storage/${encodeURIComponent(b.name)}/mount`;
 
-      const vtGroup = `vt-${b.name.replace(/[^a-zA-Z0-9]/g, "-")}`;
+      const vtGroup = `vt-${i}-${b.name.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
       const mountBtn = isActive
-        ? `<button disabled><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg></button>`
+        ? `<span data-tooltip="Currently mounted"><button disabled><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg></button></span>`
         : `<button data-on:click="@post('${mountUrl}')">Mount</button>`;
 
       const deleteBtn =
@@ -294,6 +302,7 @@ export function storageListRows(
       return `<tr${isActive ? ' class="active-row"' : ""}>
   <td class="backup-filename">
     <span>${b.name}</span>
+    <span class="backup-filepath">${b.path}</span>
     ${typeBadge || activeBadge ? `<span class="backup-badges">${typeBadge}${activeBadge}</span>` : ""}
   </td>
   <td>${label}</td>
@@ -304,9 +313,9 @@ export function storageListRows(
     .join("\n");
 }
 
-export function activeDbIndicator(name: string): string {
+export function activeDbIndicator(name: string, active: boolean): string {
   return `<span id="active-db-indicator" class="active-db-indicator">
-    <span class="active-db-dot"></span>
+    <span class="active-db-dot${active ? "" : " active-db-dot--none"}"></span>
     <span class="active-db-name">${name}</span>
   </span>`;
 }
@@ -314,11 +323,11 @@ export function activeDbIndicator(name: string): string {
 export function storageView(opts: {
   entries: BackupEntry[];
   basePath: string;
-  activeDatabase: string;
+  activeDatabase: string | undefined;
 }): string {
   const { entries, basePath, activeDatabase } = opts;
   const base = basePath.replace(/\/$/, "");
-  const activeDbName = basename(activeDatabase);
+  const activeDbName = activeDatabase ? basename(activeDatabase) : "No database";
 
   const uploadInput = html`<input
     type="file"
@@ -407,12 +416,16 @@ export function storageView(opts: {
         ${raw(styles)}
       </style>
       <div class="storage-controls">
-        <div class="ctrl-group">${raw(activeDbIndicator(activeDbName))}</div>
-        <div class="ctrl-group">
+        <div class="ctrl-group">${raw(activeDbIndicator(activeDbName, !!activeDatabase))}</div>
+        ${raw(
+          activeDatabase
+            ? `<div class="ctrl-group">
           <button class="primary" data-on:click="@post('${base}/storage')">
             Create backup
           </button>
-        </div>
+        </div>`
+            : "",
+        )}
       </div>
       <div class="storage-container">
         <div class="storage-card">

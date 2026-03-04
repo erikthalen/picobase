@@ -1,1 +1,0 @@
-CREATE TABLE "something" ("id" NUMBER PRIMARY KEY)
