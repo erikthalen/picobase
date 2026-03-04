@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import shot1 from "../../public/screenshot-1.jpg";
+import shot2 from "../../public/screenshot-2.jpg";
+
 const _features = [
   {
     num: "01",
@@ -73,8 +76,8 @@ const _features = [
       </div>
 
       <div class="pb-hero-shots" aria-hidden="true">
-        <img class="pb-hero-shot pb-hero-shot--back" src="/babybase/screenshot-2.jpg" alt="" />
-        <img class="pb-hero-shot pb-hero-shot--front" src="/babybase/screenshot-1.jpg" alt="" />
+        <img class="pb-hero-shot pb-hero-shot--back" :src="shot2" alt="" />
+        <img class="pb-hero-shot pb-hero-shot--front" :src="shot1" alt="" />
       </div>
     </section>
 
