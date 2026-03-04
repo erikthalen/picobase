@@ -6,11 +6,18 @@ export default defineConfig({
     "Lightweight, self-hosted SQLite database manager with a browser GUI.",
   base: "/picobase/",
 
-  head: [["link", { rel: "icon", href: "/picobase/favicon.svg" }]],
+  head: [
+    ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
+    [
+      "link",
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+    ],
+    ["link", { rel: "icon", href: "/picobase/favicon.svg" }],
+  ],
 
   themeConfig: {
     logo: "/logo.svg",
-    siteTitle: "Picobase",
+    siteTitle: "picobase",
 
     nav: [
       { text: "Guide", link: "/guide/what-is-picobase" },
