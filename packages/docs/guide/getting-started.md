@@ -9,17 +9,17 @@
 The fastest way to get started — no installation needed:
 
 ```bash
-npx picobase ./my-database.db
+npx babybase ./my-database.db
 ```
 
 Your browser will open automatically. See the [CLI guide](/guide/cli) for all options.
 
 ## Embedding in a Hono server
 
-If you want Picobase alongside an existing app, install it as a dependency:
+If you want Babybase alongside an existing app, install it as a dependency:
 
 ```bash
-pnpm add github:erikthalen/picobase
+pnpm add github:erikthalen/babybase
 pnpm add hono @hono/node-server
 ```
 
@@ -27,12 +27,12 @@ Then mount it as a route:
 
 ```ts
 import { serve } from "@hono/node-server";
-import { definePicobase } from "@picobase/core";
+import { defineBabybase } from "@babybase/core";
 import { Hono } from "hono";
 
 const app = new Hono();
 
-app.route("/pico", definePicobase({ database: "./my-app.db" }));
+app.route("/pico", defineBabybase({ database: "./my-app.db" }));
 
 serve(app);
 ```
@@ -45,5 +45,5 @@ Open `http://localhost:3000/pico` in your browser to access the GUI.
 | --------------- | -------- | -------------------------- | --------------------------------------------------- |
 | `database`      | `string` | —                          | Path to your `.db` or `.sqlite` file (required)     |
 | `basePath`      | `string` | `"/"`                      | URL prefix when mounted at a sub-path               |
-| `migrationsDir` | `string` | `./.picobase/migrations`   | Directory for `.sql` migration files                |
-| `storageDir`    | `string` | `./.picobase/storage`      | Directory where database backups are stored         |
+| `migrationsDir` | `string` | `./.babybase/migrations`   | Directory for `.sql` migration files                |
+| `storageDir`    | `string` | `./.babybase/storage`      | Directory where database backups are stored         |

@@ -7,28 +7,28 @@ import { createSchemaRouter } from "./features/schema/router.ts";
 import { readSettings, writeSettings } from "./features/storage/queries.ts";
 import { createStorageRouter } from "./features/storage/router.ts";
 import { createTablesRouter } from "./features/tables/router.ts";
-import type { PicobaseConfig } from "./types.ts";
+import type { BabybaseConfig } from "./types.ts";
 
 export type AppEnv = {
   Variables: {
     db: DatabaseSync;
-    config: Required<PicobaseConfig>;
+    config: Required<BabybaseConfig>;
   };
 };
 
-export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
-  const resolved: Required<PicobaseConfig> = {
+export function defineBabybase(config: BabybaseConfig): Hono<AppEnv> {
+  const resolved: Required<BabybaseConfig> = {
     database: config.database,
     basePath: config.basePath ?? "/",
-    migrationsDir: config.migrationsDir ?? "./.picobase/migrations",
-    storageDir: config.storageDir ?? "./.picobase/storage",
+    migrationsDir: config.migrationsDir ?? "./.babybase/migrations",
+    storageDir: config.storageDir ?? "./.babybase/storage",
   };
 
   const originalDatabase = config.database;
-  const picobaseDir = dirname(resolved.storageDir);
+  const babybaseDir = dirname(resolved.storageDir);
 
   // Override active database if a settings file exists from a previous mount
-  const settings = readSettings(picobaseDir);
+  const settings = readSettings(babybaseDir);
   if (settings.activeDatabase) {
     resolved.database = settings.activeDatabase;
   }
@@ -43,7 +43,7 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
     }
     resolved.database = newPath;
     db = createDb(newPath);
-    writeSettings(picobaseDir, { activeDatabase: newPath });
+    writeSettings(babybaseDir, { activeDatabase: newPath });
   };
 
   const app = new Hono<AppEnv>();
@@ -82,4 +82,4 @@ export function definePicobase(config: PicobaseConfig): Hono<AppEnv> {
   return app;
 }
 
-export type { PicobaseConfig };
+export type { BabybaseConfig };

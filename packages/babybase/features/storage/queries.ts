@@ -70,7 +70,7 @@ export function deleteBackup(storageDir: string, name: string): void {
 export function readSettings(storageDir: string): { activeDatabase?: string } {
   try {
     return JSON.parse(
-      readFileSync(join(storageDir, "picobase-settings.json"), "utf-8"),
+      readFileSync(join(storageDir, "babybase-settings.json"), "utf-8"),
     );
   } catch {
     return {};
@@ -83,7 +83,7 @@ export function writeSettings(
 ): void {
   mkdirSync(storageDir, { recursive: true });
   writeFileSync(
-    join(storageDir, "picobase-settings.json"),
+    join(storageDir, "babybase-settings.json"),
     JSON.stringify(data, null, 2),
   );
 }

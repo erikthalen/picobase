@@ -1,15 +1,15 @@
 {
-  "name": "picobase",
+  "name": "babybase",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "picobase": "./cli.js"
+    "babybase": "./cli.js"
   },
   "scripts": {
     "start": "node cli.js"
   },
   "dependencies": {
-    "@picobase/core": "workspace:*",
+    "@babybase/core": "workspace:*",
     "@hono/node-server": "catalog:",
     "hono": "catalog:"
   }

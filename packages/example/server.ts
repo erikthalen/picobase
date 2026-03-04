@@ -1,10 +1,10 @@
 import { serve } from "@hono/node-server";
-import { definePicobase } from "@picobase/core";
+import { defineBabybase } from "@babybase/core";
 import { Hono } from "hono";
 
 const app = new Hono();
-app.route("/", definePicobase({ database: "chinook.db" }));
+app.route("/", defineBabybase({ database: "chinook.db" }));
 
 serve({ fetch: app.fetch, port: 3002 }, () => {
-  console.log("Picobase dev server: http://localhost:3002");
+  console.log("Babybase dev server: http://localhost:3002");
 });

@@ -1,5 +1,5 @@
 {
-  "name": "@picobase/repo",
+  "name": "@babybase/repo",
   "private": true,
   "scripts": {
     "dev": "pnpm -r --parallel dev",

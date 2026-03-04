@@ -14,7 +14,7 @@ export interface MigrationFile {
 }
 
 export function ensureMigrationsTable(db: DatabaseSync): void {
-  db.exec(`CREATE TABLE IF NOT EXISTS _picobase_migrations (
+  db.exec(`CREATE TABLE IF NOT EXISTS _babybase_migrations (
     name TEXT PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
@@ -22,7 +22,7 @@ export function ensureMigrationsTable(db: DatabaseSync): void {
 
 export function getApplied(db: DatabaseSync): string[] {
   const rows = db
-    .prepare("SELECT name FROM _picobase_migrations ORDER BY name")
+    .prepare("SELECT name FROM _babybase_migrations ORDER BY name")
     .all() as { name: string }[];
   return rows.map((r) => r.name);
 }
@@ -44,7 +44,7 @@ export function runMigration(
 ): void {
   const sql = readFileSync(join(dir, filename), "utf8");
   db.exec(sql);
-  db.prepare("INSERT INTO _picobase_migrations (name) VALUES (?)").run(
+  db.prepare("INSERT INTO _babybase_migrations (name) VALUES (?)").run(
     filename,
   );
 }
@@ -67,7 +67,7 @@ export function deleteMigration(
   } catch {
     // file already gone
   }
-  db.prepare("DELETE FROM _picobase_migrations WHERE name = ?").run(filename);
+  db.prepare("DELETE FROM _babybase_migrations WHERE name = ?").run(filename);
 }
 
 export function saveMigration(

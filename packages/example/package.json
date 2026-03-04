@@ -1,5 +1,5 @@
 {
-  "name": "@picobase/example",
+  "name": "@babybase/example",
   "type": "module",
   "scripts": {
     "dev": "node --watch ./server.ts",
@@ -7,7 +7,7 @@
     "seed": "node ./seed.ts"
   },
   "dependencies": {
-    "@picobase/core": "workspace:*",
+    "@babybase/core": "workspace:*",
     "hono": "catalog:",
     "@hono/node-server": "catalog:"
   },

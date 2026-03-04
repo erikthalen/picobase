@@ -1,4 +1,4 @@
-# Picobase
+# Babybase
 
 Lightweight, self-hosted SQLite database manager with a browser GUI. Provides schema visualization and data management, similar to Supabase but for local SQLite files.
 

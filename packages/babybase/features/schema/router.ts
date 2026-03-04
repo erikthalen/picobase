@@ -156,7 +156,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
       ensureMigrationsTable(db);
       const filename = nextMigrationFilename(config.migrationsDir);
       saveMigration(config.migrationsDir, filename, sql);
-      db.prepare("INSERT INTO _picobase_migrations (name) VALUES (?)").run(
+      db.prepare("INSERT INTO _babybase_migrations (name) VALUES (?)").run(
         filename,
       );
     }
@@ -408,7 +408,7 @@ export function createSchemaRouter(): Hono<AppEnv> {
       const filename = nextMigrationFilename(config.migrationsDir);
       saveMigration(config.migrationsDir, filename, fullSql);
       db.exec(fullSql);
-      db.prepare("INSERT INTO _picobase_migrations (name) VALUES (?)").run(
+      db.prepare("INSERT INTO _babybase_migrations (name) VALUES (?)").run(
         filename,
       );
     }

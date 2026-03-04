@@ -4,7 +4,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset=".github/logo-white.png">
-    <img src=".github/logo-black.png" alt="picobase" height="48" />
+    <img src=".github/logo-black.png" alt="babybase" height="48" />
   </picture>
 </p>
 
@@ -24,7 +24,7 @@
 
 ---
 
-Most database tools are designed for teams, cloud accounts, and enterprise scale. Picobase is designed for the opposite: a single file, on your machine, visible in your browser. No sign-up. No infra. No monthly bill.
+Most database tools are designed for teams, cloud accounts, and enterprise scale. Babybase is designed for the opposite: a single file, on your machine, visible in your browser. No sign-up. No infra. No monthly bill.
 
 It mounts directly into your existing server as a route — like adding `/pico` to your app — and gives you a polished interface to explore your schema, browse rows, run migrations, and manage backups. Everything you'd expect from a proper database GUI, with none of the overhead.
 
@@ -36,9 +36,9 @@ For a vast category of projects — internal tools, personal apps, side projects
 
 ## How it compares
 
-Picobase occupies a different niche than the tools you may already know:
+Babybase occupies a different niche than the tools you may already know:
 
-|                      | Picobase                      | Supabase                   | PocketBase       | Prisma Studio   |
+|                      | Babybase                      | Supabase                   | PocketBase       | Prisma Studio   |
 | -------------------- | ----------------------------- | -------------------------- | ---------------- | --------------- |
 | **Hosting**          | Your server                   | Supabase cloud / self-host | Separate binary  | Local dev only  |
 | **Database**         | Your SQLite file              | PostgreSQL                 | Own SQLite       | Any (via ORM)   |
@@ -46,30 +46,30 @@ Picobase occupies a different niche than the tools you may already know:
 | **Footprint**        | A library import              | Full platform              | Separate process | Dev dependency  |
 | **Best for**         | Existing apps that use SQLite | Greenfield projects        | Rapid prototypes | Prisma projects |
 
-Supabase and PocketBase are full platforms — they bring their own auth, storage, realtime, and API generation. That is powerful, but it also means they own your architecture. Picobase does one thing: give you a window into your database. Your app, your data model, your rules — Picobase just makes it visible.
+Supabase and PocketBase are full platforms — they bring their own auth, storage, realtime, and API generation. That is powerful, but it also means they own your architecture. Babybase does one thing: give you a window into your database. Your app, your data model, your rules — Babybase just makes it visible.
 
 ## Self-hosting
 
-Because Picobase is a library rather than a service, "self-hosting" is just running your app. There is no separate container to manage, no port to expose, no admin password to rotate.
+Because Babybase is a library rather than a service, "self-hosting" is just running your app. There is no separate container to manage, no port to expose, no admin password to rotate.
 
-Deploy your Node.js application the way you normally would — on a VPS, a container platform, Fly.io, Railway, Render, or a bare server — and Picobase comes along for the ride. If you want to restrict access, put your existing auth middleware in front of the `/pico` route. You already own the server, so you already own the access controls.
+Deploy your Node.js application the way you normally would — on a VPS, a container platform, Fly.io, Railway, Render, or a bare server — and Babybase comes along for the ride. If you want to restrict access, put your existing auth middleware in front of the `/pico` route. You already own the server, so you already own the access controls.
 
 ```ts
 // Protect with whatever auth you already have
 app.use("/pico/*", yourAuthMiddleware);
-app.route("/pico", definePicobase({ database: "./app.db" }));
+app.route("/pico", defineBabybase({ database: "./app.db" }));
 ```
 
 ## Getting started
 
 ```ts
 import { serve } from "@hono/node-server";
-import { definePicobase } from "@picobase/core";
+import { defineBabybase } from "@babybase/core";
 import { Hono } from "hono";
 
 const app = new Hono();
 
-app.route("/pico", definePicobase({ database: "./my-app.db" }));
+app.route("/pico", defineBabybase({ database: "./my-app.db" }));
 
 serve(app);
 ```

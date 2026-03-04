@@ -1,10 +1,10 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "Picobase",
+  title: "Babybase",
   description:
     "Lightweight, self-hosted SQLite database manager with a browser GUI.",
-  base: "/picobase/",
+  base: "/babybase/",
 
   head: [
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
@@ -17,16 +17,16 @@ export default defineConfig({
 
   themeConfig: {
     logo: "/logo.svg",
-    siteTitle: "picobase",
+    siteTitle: "babybase",
 
-    nav: [{ text: "Documentation", link: "/guide/what-is-picobase" }],
+    nav: [{ text: "Documentation", link: "/guide/what-is-babybase" }],
 
     sidebar: {
       "/guide/": [
         {
           text: "Introduction",
           items: [
-            { text: "What is Picobase?", link: "/guide/what-is-picobase" },
+            { text: "What is Babybase?", link: "/guide/what-is-babybase" },
             { text: "Getting Started", link: "/guide/getting-started" },
           ],
         },
@@ -38,7 +38,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/erikthalen/picobase" },
+      { icon: "github", link: "https://github.com/erikthalen/babybase" },
     ],
 
     footer: {

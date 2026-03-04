@@ -24,14 +24,30 @@ importers:
         specifier: 2.4.5
         version: 2.4.5
 
-  packages/cli:
+  packages/babybase:
     dependencies:
       '@hono/node-server':
         specifier: 'catalog:'
         version: 1.19.9(hono@4.12.3)
-      '@picobase/core':
+      hono:
+        specifier: 'catalog:'
+        version: 4.12.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.3.0
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/cli:
+    dependencies:
+      '@babybase/core':
         specifier: workspace:*
-        version: link:../picobase
+        version: link:../babybase
+      '@hono/node-server':
+        specifier: 'catalog:'
+        version: 1.19.9(hono@4.12.3)
       hono:
         specifier: 'catalog:'
         version: 4.12.3
@@ -48,22 +64,9 @@ importers:
 
   packages/example:
     dependencies:
-      '@hono/node-server':
-        specifier: 'catalog:'
-        version: 1.19.9(hono@4.12.3)
-      '@picobase/core':
+      '@babybase/core':
         specifier: workspace:*
-        version: link:../picobase
-      hono:
-        specifier: 'catalog:'
-        version: 4.12.3
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.3.0
-
-  packages/picobase:
-    dependencies:
+        version: link:../babybase
       '@hono/node-server':
         specifier: 'catalog:'
         version: 1.19.9(hono@4.12.3)
@@ -74,9 +77,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.3.0
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
 
 packages:
 

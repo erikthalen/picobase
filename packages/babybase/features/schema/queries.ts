@@ -20,7 +20,7 @@ export interface PendingChange {
 }
 
 export function ensurePendingChangesTable(db: DatabaseSync): void {
-  db.exec(`CREATE TABLE IF NOT EXISTS _picobase_pending_changes (
+  db.exec(`CREATE TABLE IF NOT EXISTS _babybase_pending_changes (
     table_name TEXT PRIMARY KEY,
     desired_columns TEXT NOT NULL,
     updated_at TEXT DEFAULT (datetime('now'))
@@ -33,14 +33,14 @@ export function savePendingChanges(
   columns: DesiredColumn[],
 ): void {
   db.prepare(
-    "INSERT OR REPLACE INTO _picobase_pending_changes (table_name, desired_columns) VALUES (?, ?)",
+    "INSERT OR REPLACE INTO _babybase_pending_changes (table_name, desired_columns) VALUES (?, ?)",
   ).run(tableName, JSON.stringify(columns));
 }
 
 export function getAllPendingChanges(db: DatabaseSync): PendingChange[] {
   const rows = db
     .prepare(
-      "SELECT table_name, desired_columns FROM _picobase_pending_changes ORDER BY table_name",
+      "SELECT table_name, desired_columns FROM _babybase_pending_changes ORDER BY table_name",
     )
     .all() as { table_name: string; desired_columns: string }[];
   return rows.map((r) => ({
@@ -55,7 +55,7 @@ export function getPendingForTable(
 ): DesiredColumn[] | null {
   const row = db
     .prepare(
-      "SELECT desired_columns FROM _picobase_pending_changes WHERE table_name = ?",
+      "SELECT desired_columns FROM _babybase_pending_changes WHERE table_name = ?",
     )
     .get(tableName) as { desired_columns: string } | undefined;
   if (!row) return null;
@@ -63,14 +63,14 @@ export function getPendingForTable(
 }
 
 export function clearPendingChanges(db: DatabaseSync): void {
-  db.exec("DELETE FROM _picobase_pending_changes");
+  db.exec("DELETE FROM _babybase_pending_changes");
 }
 
 export function deletePendingForTable(
   db: DatabaseSync,
   tableName: string,
 ): void {
-  db.prepare("DELETE FROM _picobase_pending_changes WHERE table_name = ?").run(
+  db.prepare("DELETE FROM _babybase_pending_changes WHERE table_name = ?").run(
     tableName,
   );
 }

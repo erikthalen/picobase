@@ -38,7 +38,7 @@ const _features = [
         </p>
 
         <div class="pb-actions">
-          <a class="pb-btn-primary" href="/picobase/guide/getting-started"
+          <a class="pb-btn-primary" href="/babybase/guide/getting-started"
             >Get Started
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -59,7 +59,7 @@ const _features = [
           ></a>
           <a
             class="pb-btn-ghost"
-            href="https://github.com/erikthalen/picobase"
+            href="https://github.com/erikthalen/babybase"
             target="_blank"
             rel="noopener noreferrer"
             >View on GitHub</a
@@ -79,7 +79,7 @@ const _features = [
               No config file. No server to write. Point it at any
               <code>sqlite</code> file and you're in.
             </p>
-            <a class="pb-btn-primary pb-cli-link" href="/picobase/guide/cli"
+            <a class="pb-btn-primary pb-cli-link" href="/babybase/guide/cli"
               >CLI reference
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -108,17 +108,17 @@ const _features = [
             </div>
             <pre
               class="pb-terminal-body"
-            ><span class="t-prompt">$ </span><span class="t-cmd">npx picobase</span><span class="t-arg"> ./data.db</span>
+            ><span class="t-prompt">$ </span><span class="t-cmd">npx babybase</span><span class="t-arg"> ./data.db</span>
 
-<span class="t-logo">╭─╮  ╷  ╭─  ╭─╮  ╷    ╭─╮  ╭─╮  ╭─╮
-├─╯  │  │   │ │  ├─╮  ╭─┤  ╰─╮  ├─
-╵    ╵  ╰─  ╰─╯  ╰─╯  ╰─╯  ╰─╯  ╰─╯</span>
+<span class="t-logo">╷    ─╮ ╷   ╷ ╷ ╷    ─╮ ╭─╮ ╭─╮
+├─╮ ╭─┤ ├─╮ ╰─┤ ├─╮ ╭─┤ ╰─╮ ├─ 
+╰─╯ ╰─╯ ╰─╯   ╵ ╰─╯ ╰─╯  ─╯ ╰─╯</span>
 
 <span class="t-dim">  Server started on port </span><span class="t-url">3000</span><span class="t-dim">.</span>
 <span class="t-dim">  Browse your database at </span><span class="t-url">http://localhost:3000</span>
 
 <span class="t-dim">  database  </span><span class="t-muted">./data.db</span>
-<span class="t-dim">  storage   </span><span class="t-muted">./.picobase/storage</span></pre>
+<span class="t-dim">  storage   </span><span class="t-muted">./.babybase/storage</span></pre>
           </div>
         </div>
       </div>
@@ -150,7 +150,7 @@ const _features = [
           <div class="pb-browser-body">
             <!--
               Replace this block with the screenshot when it's ready:
-              <img src="/screenshot.png" alt="Picobase UI" class="pb-screenshot-img" />
+              <img src="/screenshot.png" alt="Babybase UI" class="pb-screenshot-img" />
             -->
             <div class="pb-placeholder">
               <span class="pb-placeholder-label">Screenshot coming soon</span>
@@ -165,7 +165,7 @@ const _features = [
       <div class="pb-container">
         <p class="pb-install-label">Get started in seconds</p>
         <div class="pb-install-code">
-          <code>npx picobase ./my-db.sqlite</code>
+          <code>npx babybase ./my-db.sqlite</code>
         </div>
       </div>
     </section>
@@ -501,6 +501,10 @@ const _features = [
 
 /* ── CLI spotlight ───────────────────────────────────── */
 .pb-cli {
+  animation: pb-fade-up 0.65s 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pb-cli {
   padding: 3rem 1.5rem 5rem;
 }
 
@@ -602,6 +606,7 @@ const _features = [
 }
 .t-logo {
   color: var(--accent);
+  font-family: monospace;
 }
 .t-dim {
   color: var(--text-dim);
