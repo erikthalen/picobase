@@ -5,6 +5,9 @@
   "bin": {
     "picobase": "./cli.js"
   },
+  "scripts": {
+    "start": "node cli.js"
+  },
   "dependencies": {
     "@picobase/core": "workspace:*",
     "@hono/node-server": "catalog:",
