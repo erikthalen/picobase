@@ -32,18 +32,18 @@ import { Hono } from "hono";
 
 const app = new Hono();
 
-app.route("/pico", defineBabybase({ database: "./my-app.db" }));
+app.route("/baby", defineBabybase({ database: "./my-app.db" }));
 
 serve(app);
 ```
 
-Open `http://localhost:3000/pico` in your browser to access the GUI.
+Open `http://localhost:3000/baby` in your browser to access the GUI.
 
 ## Configuration
 
-| Option          | Type     | Default                    | Description                                         |
-| --------------- | -------- | -------------------------- | --------------------------------------------------- |
-| `database`      | `string` | —                          | Path to your `.db` or `.sqlite` file (required)     |
-| `basePath`      | `string` | `"/"`                      | URL prefix when mounted at a sub-path               |
-| `migrationsDir` | `string` | `./.babybase/migrations`   | Directory for `.sql` migration files                |
-| `storageDir`    | `string` | `./.babybase/storage`      | Directory where database backups are stored         |
+| Option          | Type     | Default                  | Description                                     |
+| --------------- | -------- | ------------------------ | ----------------------------------------------- |
+| `database`      | `string` | —                        | Path to your `.db` or `.sqlite` file (required) |
+| `basePath`      | `string` | `"/"`                    | URL prefix when mounted at a sub-path           |
+| `migrationsDir` | `string` | `./.babybase/migrations` | Directory for `.sql` migration files            |
+| `storageDir`    | `string` | `./.babybase/storage`    | Directory where database backups are stored     |

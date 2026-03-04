@@ -26,7 +26,7 @@
 
 Most database tools are designed for teams, cloud accounts, and enterprise scale. Babybase is designed for the opposite: a single file, on your machine, visible in your browser. No sign-up. No infra. No monthly bill.
 
-It mounts directly into your existing server as a route — like adding `/pico` to your app — and gives you a polished interface to explore your schema, browse rows, run migrations, and manage backups. Everything you'd expect from a proper database GUI, with none of the overhead.
+It mounts directly into your existing server as a route — like adding `/baby` to your app — and gives you a polished interface to explore your schema, browse rows, run migrations, and manage backups. Everything you'd expect from a proper database GUI, with none of the overhead.
 
 ## Why SQLite
 
@@ -52,12 +52,12 @@ Supabase and PocketBase are full platforms — they bring their own auth, storag
 
 Because Babybase is a library rather than a service, "self-hosting" is just running your app. There is no separate container to manage, no port to expose, no admin password to rotate.
 
-Deploy your Node.js application the way you normally would — on a VPS, a container platform, Fly.io, Railway, Render, or a bare server — and Babybase comes along for the ride. If you want to restrict access, put your existing auth middleware in front of the `/pico` route. You already own the server, so you already own the access controls.
+Deploy your Node.js application the way you normally would — on a VPS, a container platform, Fly.io, Railway, Render, or a bare server — and Babybase comes along for the ride. If you want to restrict access, put your existing auth middleware in front of the `/baby` route. You already own the server, so you already own the access controls.
 
 ```ts
 // Protect with whatever auth you already have
-app.use("/pico/*", yourAuthMiddleware);
-app.route("/pico", defineBabybase({ database: "./app.db" }));
+app.use("/baby/*", yourAuthMiddleware);
+app.route("/baby", defineBabybase({ database: "./app.db" }));
 ```
 
 ## Getting started
@@ -69,9 +69,9 @@ import { Hono } from "hono";
 
 const app = new Hono();
 
-app.route("/pico", defineBabybase({ database: "./my-app.db" }));
+app.route("/baby", defineBabybase({ database: "./my-app.db" }));
 
 serve(app);
 ```
 
-Then open **http://localhost:3000/pico** in your browser.
+Then open **http://localhost:3000/baby** in your browser.
