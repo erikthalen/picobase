@@ -3,48 +3,44 @@
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) v22 or later
-- [pnpm](https://pnpm.io) v9 or later
+- A Hono server
 
 ## Installation
 
-Clone the repository and install dependencies:
+Install Picobase directly from GitHub:
 
 ```bash
-git clone https://github.com/erikthalen/picobase.git
-cd picobase
-pnpm install
+pnpm add github:erikthalen/picobase
 ```
 
-## Running the dev server
+You'll also need Hono and the Node.js adapter if you don't have them already:
 
 ```bash
-pnpm dev
+pnpm add hono @hono/node-server
 ```
 
-This starts the Picobase server at `http://localhost:3000`. Open it in your browser to access the GUI.
+## Adding Picobase to your server
 
-## Pointing at a database
+Mount Picobase as a route on your existing Hono app:
 
-By default Picobase opens the example database bundled in `packages/example`. To use your own SQLite file, pass the path as an environment variable:
+```ts
+import { serve } from "@hono/node-server";
+import { definePicobase } from "@picobase/core";
+import { Hono } from "hono";
 
-```bash
-DATABASE_PATH=./my-database.sqlite pnpm dev
+const app = new Hono();
+
+app.route("/pico", definePicobase({ database: "./my-app.db" }));
+
+serve(app);
 ```
 
-## Project structure
+Open `http://localhost:3000` in your browser to access the GUI.
 
-```
-packages/
-  picobase/   # core server (Hono + node:sqlite)
-  example/    # example database and seed data
-  docs/       # this documentation site (VitePress)
-```
+## Configuration
 
-## Building for production
-
-```bash
-pnpm build
-pnpm start
-```
-
-The production build compiles the TypeScript source and starts the server in production mode.
+| Option          | Type     | Description                                  |
+| --------------- | -------- | -------------------------------------------- |
+| `database`      | `string` | Path to your `.db` or `.sqlite` file         |
+| `migrationsDir` | `string` | Directory for `.sql` migration files         |
+| `backupsDir`    | `string` | Directory where automatic backups are stored |

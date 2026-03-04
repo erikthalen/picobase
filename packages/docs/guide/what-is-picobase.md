@@ -1,24 +1,23 @@
 # What is Picobase?
 
-Picobase is a lightweight, self-hosted SQLite database manager with a browser-based GUI. It lets you inspect and manage SQLite databases through a clean interface without any cloud dependency or complex setup.
+Picobase is a lightweight SQLite database manager with a browser-based GUI. Point it at any `.sqlite` file and get an instant, clean interface for browsing tables, inspecting schemas, and editing data — no setup, no cloud, no friction.
 
-Think of it as a local-first alternative to Supabase — purpose-built for SQLite files on your own machine.
+## What it gives you
 
-## Use cases
+- **Instant visibility** — open any SQLite file and see your data immediately
+- **Schema overview** — understand your table structure at a glance
+- **Data editing** — view and modify records directly in the browser
+- **Zero config** — run a single command, open a browser, done
 
-- **Local development** — inspect your app's database during development without external tooling
-- **Prototyping** — quickly browse and edit data as you build
-- **Data exploration** — load any `.sqlite` file and browse its contents immediately
+## When to reach for it
+
+- Inspecting your app's database during local development
+- Exploring an unfamiliar `.sqlite` file
+- Quickly editing seed data or checking query results while prototyping
 
 ## How it works
 
-Picobase starts a small HTTP server (powered by [Hono](https://hono.dev)) that serves a browser UI. The UI communicates with the server over [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) using [Datastar](https://data-star.dev) — there is no separate API or client-side framework.
-
-All HTML is server-rendered. Interactivity is driven entirely by server-sent signals, keeping the client footprint minimal.
-
-## What it is not
-
-Picobase is **not** a production database platform. It does not handle authentication, access control, or multi-user environments. It is a developer tool for local use.
+Picobase runs a small local server that serves a browser UI. Everything is server-rendered — there's no client-side framework, no build step, no API to configure. Just a URL you open in your browser.
 
 ## Next steps
 
