@@ -19,10 +19,7 @@ export default defineConfig({
     logo: "/logo.svg",
     siteTitle: "picobase",
 
-    nav: [
-      { text: "Guide", link: "/guide/what-is-picobase" },
-      { text: "Reference", link: "/reference/api" },
-    ],
+    nav: [{ text: "Documentation", link: "/guide/what-is-picobase" }],
 
     sidebar: {
       "/guide/": [
@@ -32,12 +29,6 @@ export default defineConfig({
             { text: "What is Picobase?", link: "/guide/what-is-picobase" },
             { text: "Getting Started", link: "/guide/getting-started" },
           ],
-        },
-      ],
-      "/reference/": [
-        {
-          text: "Reference",
-          items: [{ text: "API", link: "/reference/api" }],
         },
       ],
     },
