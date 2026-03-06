@@ -37,42 +37,36 @@ const _features = [
       <div class="pb-hero-bg" aria-hidden="true"></div>
 
       <div class="pb-container">
-      <div class="pb-hero-content">
-        <h1 class="pb-headline">Your SQLite<br />database,<br />in the browser.</h1>
+        <div class="pb-hero-content">
+          <h1 class="pb-headline">
+            Your SQLite<br />database,<br />in the browser.
+          </h1>
 
-        <p class="pb-tagline">
-          A lightweight admin panel for SQLite.<br />
-          Run it on the fly or embed it in your app.
-        </p>
+          <p class="pb-tagline">
+            A lightweight admin panel for SQLite.<br />
+            Run it on the fly or embed it in your app.
+          </p>
 
-        <div class="pb-actions">
-          <a class="pb-btn-primary" href="/babybase/guide/getting-started"
-            >Get Started
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M5 12l14 0" />
-              <path d="M15 16l4 -4" />
-              <path d="M15 8l4 4" /></svg
-          ></a>
-          <a
-            class="pb-btn-ghost"
-            href="https://github.com/erikthalen/babybase"
-            target="_blank"
-            rel="noopener noreferrer"
-            >View on GitHub</a
-          >
+          <div class="pb-actions">
+            <a class="pb-btn-primary" href="/babybase/guide/getting-started">Get Started
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 12l14 0" />
+                <path d="M15 16l4 -4" />
+                <path d="M15 8l4 4" />
+              </svg></a>
+            <a class="pb-btn-ghost" href="https://github.com/erikthalen/babybase" target="_blank"
+              rel="noopener noreferrer">View on GitHub</a>
+          </div>
+
+          <p class="pb-demo-hint">Explore a live example environment</p>
+          <p class="pb-demo-description">Launch the interactive demo to inspect a preconfigured sample database.</p>
+          <div class="pb-terminal hero-terminal" aria-hidden="true" style="width: 100%">
+            <pre
+              class="pb-terminal-body"><span class="t-prompt">$ </span><span class="t-cmd">npx babybase</span><span class="t-arg"> demo</span></pre>
+          </div>
         </div>
-      </div>
       </div>
 
       <div class="pb-hero-shots" aria-hidden="true">
@@ -89,23 +83,13 @@ const _features = [
             <p class="pb-cli-eyebrow">Option 1 — on the fly</p>
             <h2 class="pb-cli-heading">One command.<br />Browser opens.</h2>
             <p class="pb-cli-desc">
-              No config, no setup. Point it at any <code>.db</code> file
-              and your browser opens automatically. Great for quick
-              exploration or one-off tasks.
+              No config, no setup. Point it at any <code>.db</code> file and
+              your browser opens automatically. Great for quick exploration or
+              one-off tasks.
             </p>
-            <a class="pb-btn-primary pb-cli-link" href="/babybase/guide/cli"
-              >CLI reference
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+            <a class="pb-btn-primary pb-cli-link" href="/babybase/guide/cli">CLI reference
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M5 12l14 0" />
                 <path d="M15 16l4 -4" />
@@ -120,9 +104,7 @@ const _features = [
               <span class="pb-dot"></span>
               <span class="pb-terminal-title">terminal</span>
             </div>
-            <pre
-              class="pb-terminal-body"
-            ><span class="t-prompt">$ </span><span class="t-cmd">npx babybase</span><span class="t-arg"> ./data.db</span>
+            <pre class="pb-terminal-body"><span class="t-prompt">$ </span><span class="t-cmd">npx babybase</span><span class="t-arg"> ./data.db</span>
 
 <span class="t-logo">╷    ─╮ ╷   ╷ ╷ ╷    ─╮ ╭─╮ ╭─╮
 ├─╮ ╭─┤ ├─╮ ╰─┤ ├─╮ ╭─┤ ╰─╮ ├─ 
@@ -146,28 +128,35 @@ const _features = [
             <p class="pb-cli-eyebrow">Option 2 — self-hosted</p>
             <h2 class="pb-embed-heading">Already have<br />an app?</h2>
             <p class="pb-embed-desc">
-              Mount it as a route inside your existing Hono server and
-              it travels with your deployment. Protect it with whatever
-              auth you already have — no new infrastructure needed.
+              Mount it as a route inside your existing Hono server and it
+              travels with your deployment. Protect it with whatever auth you
+              already have — no new infrastructure needed.
             </p>
             <a class="pb-btn-primary pb-embed-link" href="/babybase/guide/getting-started">
               Getting started
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M5 12l14 0"/><path d="M15 16l4 -4"/><path d="M15 8l4 4"/>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 12l14 0" />
+                <path d="M15 16l4 -4" />
+                <path d="M15 8l4 4" />
               </svg>
             </a>
           </div>
           <div class="pb-editor">
             <div class="pb-editor-bar">
               <div class="pb-editor-tab">
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pb-editor-tab-icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="pb-editor-tab-icon">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                </svg>
                 server.ts
               </div>
             </div>
-            <pre
-              class="pb-editor-body"
-            ><span class="e-k">import</span> { <span class="e-i">Hono</span> } <span class="e-k">from</span> <span class="e-s">"hono"</span>
+            <pre class="pb-editor-body"><span class="e-k">import</span> { <span class="e-i">Hono</span> } <span class="e-k">from</span> <span class="e-s">"hono"</span>
 <span class="e-k">import</span> { <span class="e-i">serve</span> } <span class="e-k">from</span> <span class="e-s">"@hono/node-server"</span>
 <span class="e-k">import</span> { <span class="e-i">defineBabybase</span> } <span class="e-k">from</span> <span class="e-s">"@babybase/core"</span>
 
@@ -198,7 +187,6 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
         </div>
       </div>
     </section>
-
   </div>
 </template>
 
@@ -248,27 +236,21 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(
-      ellipse 90% 60% at 50% -10%,
+    radial-gradient(ellipse 90% 60% at 50% -10%,
       rgba(45, 212, 191, 0.07) 0%,
-      transparent 70%
-    ),
+      transparent 70%),
     linear-gradient(to right, var(--border) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border) 1px, transparent 1px);
   background-size:
     auto,
     48px 48px,
     48px 48px;
-  mask-image: radial-gradient(
-    ellipse 100% 90% at 50% 0%,
-    black 30%,
-    transparent 75%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse 100% 90% at 50% 0%,
-    black 30%,
-    transparent 75%
-  );
+  mask-image: radial-gradient(ellipse 100% 90% at 50% 0%,
+      black 30%,
+      transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 90% at 50% 0%,
+      black 30%,
+      transparent 75%);
 }
 
 .pb-hero-content {
@@ -357,9 +339,11 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
 .pb-headline {
   animation-delay: 0ms;
 }
+
 .pb-tagline {
   animation-delay: 90ms;
 }
+
 .pb-actions {
   animation-delay: 180ms;
 }
@@ -369,6 +353,7 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -398,6 +383,41 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
   display: flex;
   gap: 0.875rem;
   flex-wrap: wrap;
+}
+
+.pb-demo-hint {
+  margin: 2rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  animation: pb-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 260ms;
+}
+
+.pb-demo-description {
+  margin-bottom: 1rem;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  animation: pb-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 260ms;
+}
+
+.hero-terminal {
+  animation: pb-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 260ms;
+}
+
+.pb-demo-cmd {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--accent-dim);
+  border-radius: 3px;
+  padding: 1em 2em;
+
+  span {
+    color: var(--accent);
+  }
 }
 
 .pb-btn-primary,
@@ -486,29 +506,41 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
 .pb-feature:nth-child(1) {
   animation-delay: 280ms;
 }
+
 .pb-feature:nth-child(1)::before {
-  background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(45, 212, 191, 0.07), transparent);
+  background: radial-gradient(ellipse 80% 60% at 0% 0%,
+      rgba(45, 212, 191, 0.07),
+      transparent);
 }
 
 .pb-feature:nth-child(2) {
   animation-delay: 340ms;
 }
+
 .pb-feature:nth-child(2)::before {
-  background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(139, 92, 246, 0.07), transparent);
+  background: radial-gradient(ellipse 80% 60% at 100% 0%,
+      rgba(139, 92, 246, 0.07),
+      transparent);
 }
 
 .pb-feature:nth-child(3) {
   animation-delay: 400ms;
 }
+
 .pb-feature:nth-child(3)::before {
-  background: radial-gradient(ellipse 80% 60% at 0% 100%, rgba(59, 130, 246, 0.07), transparent);
+  background: radial-gradient(ellipse 80% 60% at 0% 100%,
+      rgba(59, 130, 246, 0.07),
+      transparent);
 }
 
 .pb-feature:nth-child(4) {
   animation-delay: 460ms;
 }
+
 .pb-feature:nth-child(4)::before {
-  background: radial-gradient(ellipse 80% 60% at 100% 100%, rgba(251, 146, 60, 0.06), transparent);
+  background: radial-gradient(ellipse 80% 60% at 100% 100%,
+      rgba(251, 146, 60, 0.06),
+      transparent);
 }
 
 .pb-feature-num {
@@ -650,23 +682,29 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
 .t-prompt {
   color: var(--text-dim);
 }
+
 .t-cmd {
   color: var(--text);
 }
+
 .t-arg {
   color: var(--accent);
   opacity: 0.85;
 }
+
 .t-logo {
   color: var(--accent);
   font-family: monospace;
 }
+
 .t-dim {
   color: var(--text-dim);
 }
+
 .t-url {
   color: var(--accent);
 }
+
 .t-muted {
   color: var(--text-muted);
 }
@@ -792,12 +830,30 @@ app.<span class="e-f">route</span>(<span class="e-s">"/admin"</span>, <span clas
   overflow-x: auto;
 }
 
-.e-k { color: #c678dd; }
-.e-s { color: #98c379; }
-.e-f { color: #61afef; }
-.e-t { color: #e5c07b; }
-.e-i { color: var(--text-dim); }
-.e-c { color: #4b5563; font-style: italic; }
+.e-k {
+  color: #c678dd;
+}
+
+.e-s {
+  color: #98c379;
+}
+
+.e-f {
+  color: #61afef;
+}
+
+.e-t {
+  color: #e5c07b;
+}
+
+.e-i {
+  color: var(--text-dim);
+}
+
+.e-c {
+  color: #4b5563;
+  font-style: italic;
+}
 
 @media (max-width: 768px) {
   .pb-embed-inner {

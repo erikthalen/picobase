@@ -19,7 +19,7 @@ Your browser will open automatically. See the [CLI guide](/guide/cli) for all op
 If you want Babybase alongside an existing app, install it as a dependency:
 
 ```bash
-pnpm add github:erikthalen/babybase
+pnpm add @babybase/core
 pnpm add hono @hono/node-server
 ```
 
